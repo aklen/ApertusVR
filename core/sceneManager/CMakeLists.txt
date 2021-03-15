@@ -116,6 +116,15 @@ endif()
 # Add the dinamic library target to the project
 add_library(apeSceneManager SHARED ${SOURCES} ${HEADERS})
 
+# Last chance to find target dependencies
+if (NOT TARGET RAKNET)
+  find_package(RAKNET REQUIRED)
+endif()
+
+if (NOT TARGET MY_ZIP)
+	find_package(MY_ZIP REQUIRED)
+endif()
+
 # Link with dependency libraries and add preprocessor definitions with lists
 set(APE_LINK_LIBS_SCENEMANAGER
 	apeCoreConfig

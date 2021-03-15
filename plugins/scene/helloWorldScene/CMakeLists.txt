@@ -45,7 +45,7 @@ include_directories(
 add_library (apeHelloWorldScenePlugin SHARED ${SOURCES} ${HEADERS})
 
 # Link with dependency libraries
-target_link_libraries (apeHelloWorldScenePlugin apePluginManager apeSceneManager apeEventManager apeLogManager apeSceneMakerMacro)
+target_link_libraries (apeHelloWorldScenePlugin apePluginManager apeSceneManager apeEventManager apeLogManager)
 if (WIN32)
 	# we have to link to some DirectX libraries
 	target_link_libraries (apeHelloWorldScenePlugin dinput8 dxguid)

@@ -31,6 +31,7 @@ ape::SceneNetworkImpl::SceneNetworkImpl()
 	, mpNatPunchthroughClient(nullptr)
 	, mpLobbyManager(nullptr)
 {
+	APE_LOG_FUNC_ENTER();
 	msSingleton = this;
 	mpCoreConfig = ape::ICoreConfig::getSingletonPtr();
 	mpEventManager = ape::IEventManager::getSingletonPtr();
@@ -96,6 +97,7 @@ ape::SceneNetworkImpl::SceneNetworkImpl()
 			}
 		}*/
 	}
+	APE_LOG_FUNC_LEAVE();
 }
 
 ape::SceneNetworkImpl::~SceneNetworkImpl()

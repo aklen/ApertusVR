@@ -65,7 +65,7 @@ else()
 	# add_library(MY_ZIP ALIAS zip)
 	# set(MY_ZIP_INCLUDE_DIR ${ZIP_SRC_DIR}/src)
 
-	set(ZIP_READY FALSE)
+	# set(ZIP_READY FALSE)
 	if (EXISTS ${ZIP_SRC_DIR}/android/${ANDROID_ABI}/libzip.a)
 		set(ZIP_INSTALLED TRUE)
 		message(STATUS "zip is installed")

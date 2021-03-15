@@ -26,11 +26,13 @@ SOFTWARE.*/
 
 ape::PluginManagerImpl::PluginManagerImpl()
 {
+	APE_LOG_FUNC_ENTER();
 	msSingleton = this;
 	mpCoreConfig = ape::ICoreConfig::getSingletonPtr();
 	mThreadVector = std::vector<std::thread>();
 	mPluginVector = std::vector<ape::IPlugin*>();
 	mPluginCount = 0;
+	APE_LOG_FUNC_LEAVE();
 }
 
 ape::PluginManagerImpl::~PluginManagerImpl()
@@ -40,6 +42,7 @@ ape::PluginManagerImpl::~PluginManagerImpl()
 
 void ape::PluginManagerImpl::loadPlugin(std::string name)
 {
+	APE_LOG_FUNC_ENTER();
 	if (mpInternalPluginManager->Load(name))
 	{
 		ape::IPlugin* plugin = ape::PluginFactory::CreatePlugin(name);
@@ -55,6 +58,7 @@ void ape::PluginManagerImpl::loadPlugin(std::string name)
 	{
 		APE_LOG_ERROR("Can not load plugin: " << name);
 	}
+	APE_LOG_FUNC_LEAVE();
 }
 
 void ape::PluginManagerImpl::CreatePlugin(std::string pluginname)
@@ -64,11 +68,14 @@ void ape::PluginManagerImpl::CreatePlugin(std::string pluginname)
 
 void ape::PluginManagerImpl::CreatePlugins()
 {
+	APE_LOG_FUNC_ENTER();
 	mpInternalPluginManager = &ape::InternalPluginManager::GetInstance();
 	auto pluginNames = mpCoreConfig->getPluginNames();
+	APE_LOG_DEBUG("number of plugins to load: " << pluginNames.size());
 	mPluginCount = pluginNames.size();
 	for (std::vector<std::string>::iterator it = pluginNames.begin(); it != pluginNames.end(); ++it)
 	{
+		APE_LOG_DEBUG("Plugin name: " << *it);
 		if (mpInternalPluginManager->Load((*it)))
 		{
 			CreatePlugin(*it);
@@ -80,14 +87,15 @@ void ape::PluginManagerImpl::CreatePlugins()
 			APE_LOG_ERROR("Can not load plugin: " << *it);
 		}
 	}
+	APE_LOG_FUNC_LEAVE();
 }
 
-void ape::PluginManagerImpl::callStepFunc(){
+void ape::PluginManagerImpl::callStepFunc()
+{
     for (auto const& plugin : mPluginVector)
     {
             plugin->Step();
     }
-    
 }
 //callStepFunc
 //for plugin : step
@@ -120,10 +128,12 @@ void ape::PluginManagerImpl::StopPlugins()
 
 void ape::PluginManagerImpl::InitAndRunPlugins()
 {
+	APE_LOG_FUNC_ENTER();
 	for (std::vector<ape::IPlugin*>::iterator it = mPluginVector.begin(); it != mPluginVector.end(); ++it)
 	{
 		mThreadVector.push_back(std::thread(&PluginManagerImpl::InitAndRunPlugin, this, (*it)));
 	}
+	APE_LOG_FUNC_ENTER();
 }
 
 void ape::PluginManagerImpl::registerUserThreadFunction(std::function<void()> userThreadFunction)
@@ -145,5 +155,3 @@ unsigned int ape::PluginManagerImpl::getPluginCount()
 {
 	return mPluginCount;
 }
-
-

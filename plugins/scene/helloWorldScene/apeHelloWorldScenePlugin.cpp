@@ -5,10 +5,11 @@ ape::apeHelloWorldScenePlugin::apeHelloWorldScenePlugin()
 	APE_LOG_FUNC_ENTER();
 	mpCoreConfig = ape::ICoreConfig::getSingletonPtr();
 	mpEventManager = ape::IEventManager::getSingletonPtr();
-	mpEventManager->connectEvent(ape::Event::Group::CAMERA, std::bind(&apeHelloWorldScenePlugin::eventCallBack, this, std::placeholders::_1));
 	mpEventManager->connectEvent(ape::Event::Group::NODE, std::bind(&apeHelloWorldScenePlugin::eventCallBack, this, std::placeholders::_1));
+	mpEventManager->connectEvent(ape::Event::Group::GEOMETRY_TEXT, std::bind(&apeHelloWorldScenePlugin::eventCallBack, this, std::placeholders::_1));
 	mpSceneManager = ape::ISceneManager::getSingletonPtr();
-	mpSceneMakerMacro = new ape::SceneMakerMacro();
+	mCounter = 0;
+	mIsHost = mpCoreConfig->getNetworkConfig().participant == SceneNetwork::ParticipantType::HOST;
 	APE_LOG_FUNC_LEAVE();
 }
 
@@ -22,39 +23,24 @@ ape::apeHelloWorldScenePlugin::~apeHelloWorldScenePlugin()
 
 void ape::apeHelloWorldScenePlugin::eventCallBack(const ape::Event& event)
 {
-
+	if (event.group == ape::Event::Group::GEOMETRY_TEXT) {
+		if (event.type == ape::Event::Type::GEOMETRY_TEXT_CAPTION) {
+			if (auto text = std::static_pointer_cast<ape::ITextGeometry>(mpSceneManager->getEntity(event.subjectName).lock())) {
+				APE_LOG_DEBUG(text->getCaption());
+			}
+		}
+	}
 }
 
 void ape::apeHelloWorldScenePlugin::Init()
 {
 	APE_LOG_FUNC_ENTER();
-	if (auto universeSkyBoxMaterial = std::static_pointer_cast<ape::IFileMaterial>(mpSceneManager->createEntity("universe", ape::Entity::MATERIAL_FILE, true, mpCoreConfig->getNetworkGUID()).lock()))
-	{
-		universeSkyBoxMaterial->setFileName("universe");
-		universeSkyBoxMaterial->setAsSkyBox();
-	}
-	if (auto light = std::static_pointer_cast<ape::ILight>(mpSceneManager->createEntity("light", ape::Entity::LIGHT, true, mpCoreConfig->getNetworkGUID()).lock()))
-	{
-		light->setLightType(ape::Light::Type::DIRECTIONAL);
-		light->setLightDirection(ape::Vector3(1, 0, 0));
-		light->setDiffuseColor(ape::Color(0.8f, 0.8f, 0.8f));
-		light->setSpecularColor(ape::Color(0.8f, 0.8f, 0.8f));
-	}
-	mPlanetNode = mpSceneManager->createNode("planetNode", true, mpCoreConfig->getNetworkGUID());
-	if (auto planetNode = mPlanetNode.lock())
-	{
-		//planetNode->setScale(ape::Vector3(10, 10, 10));
-		planetNode->setPosition(ape::Vector3(0, 150, 0));
-		if (auto planetMeshFile = std::static_pointer_cast<ape::IFileGeometry>(mpSceneManager->createEntity("planet.mesh", ape::Entity::GEOMETRY_FILE, true, mpCoreConfig->getNetworkGUID()).lock()))
+	if (mIsHost) {
+		mTextNode = mpSceneManager->createNode("helloWorldNode", true, mpCoreConfig->getNetworkGUID());
+		if (auto textNode = mTextNode.lock())
 		{
-			planetMeshFile->setFileName("planet.mesh");
-			planetMeshFile->setParentNode(planetNode);
-		}
-		if (auto textNode = mpSceneManager->createNode("helloWorldText_Node", true, mpCoreConfig->getNetworkGUID()).lock())
-		{
-			textNode->setParentNode(planetNode);
-			textNode->setPosition(ape::Vector3(0.0f, 10.0f, 0.0f));
-			if (auto userNameText = std::static_pointer_cast<ape::ITextGeometry>(mpSceneManager->createEntity("helloWorldText", ape::Entity::GEOMETRY_TEXT, true, mpCoreConfig->getNetworkGUID()).lock()))
+			mTextEntity = mpSceneManager->createEntity("helloWorldText", ape::Entity::GEOMETRY_TEXT, true, mpCoreConfig->getNetworkGUID());
+			if (auto userNameText = std::static_pointer_cast<ape::ITextGeometry>(mTextEntity.lock()))
 			{
 				userNameText->setCaption("helloWorld");
 				userNameText->setParentNode(textNode);
@@ -67,11 +53,21 @@ void ape::apeHelloWorldScenePlugin::Init()
 void ape::apeHelloWorldScenePlugin::Run()
 {
 	APE_LOG_FUNC_ENTER();
-	while (true)
-	{
-		std::this_thread::sleep_for(std::chrono::milliseconds(20));
-		if (auto planetNode = mPlanetNode.lock())
-			planetNode->rotate(0.0017f, ape::Vector3(0, 1, 0), ape::Node::TransformationSpace::LOCAL);
+	if (mIsHost) {
+		while (true)
+		{
+			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+			mCounter++;
+			if (auto userNameText = std::static_pointer_cast<ape::ITextGeometry>(mTextEntity.lock())) {
+				userNameText->setCaption("helloWorld " + std::to_string(mCounter));
+			}
+		}
+	}
+	else {
+		while (true)
+		{
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		}
 	}
 	APE_LOG_FUNC_LEAVE();
 }

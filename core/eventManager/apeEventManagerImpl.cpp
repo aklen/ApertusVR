@@ -24,6 +24,7 @@ SOFTWARE.*/
 
 ape::EventManagerImpl::EventManagerImpl()
 {
+	APE_LOG_FUNC_ENTER();
 	msSingleton = this;
 }
 

@@ -52,7 +52,6 @@ SOFTWARE.*/
 #include "apeITextGeometry.h"
 #include "apeITubeGeometry.h"
 #include "apeInterpolator.h"
-#include "apeSceneMakerMacro.h"
 
 #define THIS_PLUGINNAME "apeHelloWorldScenePlugin"
 
@@ -67,9 +66,15 @@ namespace ape
 
 		ape::ICoreConfig* mpCoreConfig;
 
-		ape::SceneMakerMacro* mpSceneMakerMacro;
-
 		ape::NodeWeakPtr mPlanetNode;
+
+		ape::NodeWeakPtr mTextNode;
+
+		ape::EntityWeakPtr mTextEntity;
+
+		int mCounter;
+
+		bool mIsHost;
 
 		void eventCallBack(const ape::Event& event);
 

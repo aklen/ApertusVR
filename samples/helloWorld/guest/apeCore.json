@@ -3,8 +3,8 @@
     "apeHelloWorldScenePlugin"
   ],
   "network": {
-    "user": "testUser",
-    "participant": "host",
+    "user": "testUser2",
+    "participant": "guest",
     "internet": {
       "natPunchThrough": {
         "ip": "195.111.2.95",
