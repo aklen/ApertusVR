@@ -107,6 +107,11 @@ void ape::Replica::DeallocReplica( RakNet::Connection_RM3 *sourceConnection )
 
 RakNet::RM3QuerySerializationResult ape::Replica::QuerySerialization(RakNet::Connection_RM3 *destinationConnection)
 {
+	if (mOwnerID == "none")
+	{
+		return RakNet::RM3QSR_CALL_SERIALIZE;
+	}
+
 	if (mIsHost)
 	{
 		if (mOwnerID == mpCoreConfig->getNetworkGUID())
@@ -168,4 +173,9 @@ void ape::Replica::listenStreamPeerSendThread(RakNet::RakPeerInterface* streamPe
 void ape::Replica::listenStreamPeerReceiveThread(RakNet::RakPeerInterface* streamPeer)
 {
 
+}
+
+bool ape::Replica::isHost()
+{
+	return mIsHost;
 }

@@ -47,6 +47,8 @@ SOFTWARE.*/
 #include "apeFileTextureImpl.h"
 #include "apeManualTextureImpl.h"
 #include "apeRigidBodyImpl.h"
+#include "apeCommandImpl.h"
+#include "apeCommandResponseImpl.h"
 
 ape::ReplicaManagerConnection::ReplicaManagerConnection(const RakNet::SystemAddress &_systemAddress, RakNet::RakNetGUID _guid) : Connection_RM3(_systemAddress, _guid)
 {
@@ -73,6 +75,34 @@ RakNet::Replica3* ape::ReplicaManagerConnection::AllocReplica(RakNet::BitStream 
 		//APE_LOG_DEBUG("Received name: " << nodeName.C_String() << std::endl;
 		if (auto node = mpSceneManagerImpl->createNode(nodeName.C_String(), true, ownerID.C_String()).lock())
 			return ((ape::NodeImpl*)node.get());
+	}
+	else if (objectType == "Command")
+	{
+		RakNet::RakString commandName;
+		allocationIdBitstream->Read(commandName);
+		RakNet::RakString ownerID;
+		allocationIdBitstream->Read(ownerID);
+		ape::Command::RunMode runMode;
+		allocationIdBitstream->Read(runMode);
+		RakNet::RakString userToRun;
+		allocationIdBitstream->Read(userToRun);
+		//APE_LOG_DEBUG("Received name: " << commandName.C_String() << std::endl;
+		if (auto command = mpSceneManagerImpl->createCommand(commandName.C_String(), true, ownerID.C_String(), runMode, userToRun.C_String()).lock())
+			return ((ape::CommandImpl*)command.get());
+	}
+	else if (objectType == "CommandResponse")
+	{
+		RakNet::RakString commandResponseName;
+		allocationIdBitstream->Read(commandResponseName);
+		RakNet::RakString ownerID;
+		allocationIdBitstream->Read(ownerID);
+		RakNet::RakString userName;
+		allocationIdBitstream->Read(userName);
+		ape::CommandResponse::RunMode runMode;
+		allocationIdBitstream->Read(runMode);
+		//APE_LOG_DEBUG("Received name: " << commandResponseName.C_String() << std::endl;
+		if (auto command = mpSceneManagerImpl->createCommandResponse(commandResponseName.C_String(), true, ownerID.C_String(), runMode, userName.C_String()).lock())
+			return ((ape::CommandResponseImpl*)command.get());
 	}
 	else if (objectType == "ManualTexture")
 	{

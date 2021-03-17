@@ -64,8 +64,24 @@ namespace ape
 
 		void deleteEntity(std::string name) override;
 
+		ape::CommandWeakPtr getCommand(std::string name) override;
+
+		ape::CommandWeakPtr createCommand(std::string name, bool replicate, std::string ownerID, ape::Command::RunMode runMode, std::string userToRun) override;
+
+		void deleteCommand(std::string name) override;
+
+		ape::CommandResponseWeakPtr getCommandResponse(std::string name) override;
+
+		ape::CommandResponseWeakPtr createCommandResponse(std::string name, bool replicate, std::string ownerID, ape::CommandResponse::RunMode runMode, std::string userName) override;
+
+		void deleteCommandResponse(std::string name) override;
+
 	private:
 		ape::IEventManager* mpEventManager;
+
+		ape::CommandSharedPtrNameMap mCommands;
+
+		ape::CommandResponseSharedPtrNameMap mCommandResponses;
 
 		ape::NodeSharedPtrNameMap mNodes;
 

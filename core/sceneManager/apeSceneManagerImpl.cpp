@@ -50,6 +50,8 @@ SOFTWARE.*/
 #include "apeSceneNetworkImpl.h"
 #include "apeEventManagerImpl.h"
 #include "apeRigidBodyImpl.h"
+#include "apeCommandImpl.h"
+#include "apeCommandResponseImpl.h"
 
 ape::SceneManagerImpl::SceneManagerImpl()
 {
@@ -674,3 +676,68 @@ void ape::SceneManagerImpl::deleteEntity(std::string name)
 	mEntities.erase(name);
 }
 
+ape::CommandWeakPtr ape::SceneManagerImpl::createCommand(std::string name, bool replicate, std::string ownerID, ape::Command::RunMode runMode, std::string userToRun)
+{
+	auto command = std::make_shared<ape::CommandImpl>(name, replicate, ownerID, ((ape::SceneNetworkImpl*)mpSceneNetwork)->isReplicaHost(), runMode, userToRun);
+	mCommands.insert(std::make_pair(name, command));
+	((ape::EventManagerImpl*)mpEventManager)->fireEvent(ape::Event(name, ape::Event::Type::COMMAND_CREATE));
+	if (replicate)
+	{
+		if (auto replicaManager = ((ape::SceneNetworkImpl*)mpSceneNetwork)->getReplicaManager().lock())
+			replicaManager->Reference(command.get());
+	}
+	return command;
+}
+
+ape::CommandWeakPtr ape::SceneManagerImpl::getCommand(std::string name)
+{
+	if (mCommands.find(name) != mCommands.end())
+		return mCommands[name];
+	else
+		return ape::CommandWeakPtr();
+}
+
+void ape::SceneManagerImpl::deleteCommand(std::string name)
+{
+	auto command = std::static_pointer_cast<ape::CommandImpl>(mCommands[name]);
+	((ape::EventManagerImpl*)mpEventManager)->fireEvent(ape::Event(name, ape::Event::Type::COMMAND_DELETE));
+	if (command->isReplicated())
+	{
+		if (auto replicaManager = ((ape::SceneNetworkImpl*)mpSceneNetwork)->getReplicaManager().lock())
+			replicaManager->Dereference(command.get());
+	}
+	mCommands.erase(name);
+}
+
+ape::CommandResponseWeakPtr ape::SceneManagerImpl::createCommandResponse(std::string name, bool replicate, std::string ownerID, ape::CommandResponse::RunMode runMode, std::string userName)
+{
+	auto commandResponse = std::make_shared<ape::CommandResponseImpl>(name, replicate, ownerID, ((ape::SceneNetworkImpl*)mpSceneNetwork)->isReplicaHost(), runMode, userName);
+	mCommandResponses.insert(std::make_pair(name, commandResponse));
+	((ape::EventManagerImpl*)mpEventManager)->fireEvent(ape::Event(name, ape::Event::Type::COMMAND_RESPONSE_CREATE));
+	if (replicate)
+	{
+		if (auto replicaManager = ((ape::SceneNetworkImpl*)mpSceneNetwork)->getReplicaManager().lock())
+			replicaManager->Reference(commandResponse.get());
+	}
+	return commandResponse;
+}
+
+ape::CommandResponseWeakPtr ape::SceneManagerImpl::getCommandResponse(std::string name)
+{
+	if (mCommandResponses.find(name) != mCommandResponses.end())
+		return mCommandResponses[name];
+	else
+		return ape::CommandResponseWeakPtr();
+}
+
+void ape::SceneManagerImpl::deleteCommandResponse(std::string name)
+{
+	auto commandResponse = std::static_pointer_cast<ape::CommandResponseImpl>(mCommandResponses[name]);
+	((ape::EventManagerImpl*)mpEventManager)->fireEvent(ape::Event(name, ape::Event::Type::COMMAND_RESPONSE_DELETE));
+	if (commandResponse->isReplicated())
+	{
+		if (auto replicaManager = ((ape::SceneNetworkImpl*)mpSceneNetwork)->getReplicaManager().lock())
+			replicaManager->Dereference(commandResponse.get());
+	}
+	mCommandResponses.erase(name);
+}

@@ -36,6 +36,8 @@ set (HEADERS
 		apeIBrowser.h
 		apeICamera.h
 		apeICloneGeometry.h
+		apeICommand.h
+		apeICommandResponse.h
 		apeIConeGeometry.h
 		apeICoreConfig.h
 		apeICylinderGeometry.h
@@ -81,6 +83,8 @@ set (HEADERS
 		apeVector2.h
 		apeVector3.h
 		apeVector4.h
+		apeUtils.h
+		subprocess.h
 	)
 
 add_custom_target(

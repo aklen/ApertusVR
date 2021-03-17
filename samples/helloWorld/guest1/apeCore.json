@@ -3,7 +3,7 @@
     "apeHelloWorldScenePlugin"
   ],
   "network": {
-    "user": "testUser2",
+    "user": "guest1",
     "participant": "guest",
     "internet": {
       "natPunchThrough": {

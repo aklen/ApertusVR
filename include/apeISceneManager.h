@@ -36,6 +36,8 @@ SOFTWARE.*/
 #include "apeSingleton.h"
 #include "apeINode.h"
 #include "apeEntity.h"
+#include "apeICommand.h"
+#include "apeICommandResponse.h"
 
 namespace ape
 {
@@ -60,6 +62,18 @@ namespace ape
 		virtual void deleteNode(std::string name) = 0;
 
 		virtual void deleteEntity(std::string name) = 0;
+
+		virtual ape::CommandWeakPtr getCommand(std::string name) = 0;
+
+		virtual ape::CommandWeakPtr createCommand(std::string name, bool replicate, std::string ownerID, ape::Command::RunMode runMode, std::string userToRun) = 0;
+
+		virtual void deleteCommand(std::string name) = 0;
+
+		virtual ape::CommandResponseWeakPtr getCommandResponse(std::string name) = 0;
+
+		virtual ape::CommandResponseWeakPtr createCommandResponse(std::string name, bool replicate, std::string ownerID, ape::CommandResponse::RunMode runMode, std::string userName) = 0;
+
+		virtual void deleteCommandResponse(std::string name) = 0;
 	};
 }
 

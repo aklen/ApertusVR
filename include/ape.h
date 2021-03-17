@@ -184,6 +184,26 @@ namespace ape
 	typedef std::weak_ptr<IRigidBody> RigidBodyWeakPtr;
 
 	typedef std::shared_ptr<IRigidBody> RigidBodySharedPtr;
+
+	class ICommand;
+
+	typedef std::shared_ptr<ICommand> CommandSharedPtr;
+
+	typedef std::weak_ptr<ICommand> CommandWeakPtr;
+
+	typedef std::map<std::string, CommandSharedPtr> CommandSharedPtrNameMap;
+
+	typedef std::map<std::string, CommandWeakPtr> CommandWeakPtrNameMap;
+
+	class ICommandResponse;
+
+	typedef std::shared_ptr<ICommandResponse> CommandResponseSharedPtr;
+
+	typedef std::weak_ptr<ICommandResponse> CommandResponseWeakPtr;
+
+	typedef std::map<std::string, CommandResponseSharedPtr> CommandResponseSharedPtrNameMap;
+
+	typedef std::map<std::string, CommandResponseWeakPtr> CommandResponseWeakPtrNameMap;
 }
 
 #endif

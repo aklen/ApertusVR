@@ -95,7 +95,9 @@ namespace ape
 		virtual void listenStreamPeerSendThread(RakNet::RakPeerInterface* streamPeer);
 
 		virtual void listenStreamPeerReceiveThread(RakNet::RakPeerInterface* streamPeer);
-		
+
+		bool isHost();
+
 	};
 }
 

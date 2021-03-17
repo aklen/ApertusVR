@@ -23,6 +23,30 @@ SOFTWARE.*/
 #ifndef APE_HELLOWORLDSCENEPLUGIN_H
 #define APE_HELLOWORLDSCENEPLUGIN_H
 
+#include "apeICamera.h"
+#include "apeICommand.h"
+#include "apeICommandResponse.h"
+#include "apeIConeGeometry.h"
+#include "apeICoreConfig.h"
+#include "apeIEventManager.h"
+#include "apeIFileGeometry.h"
+#include "apeIFileMaterial.h"
+#include "apeIIndexedFaceSetGeometry.h"
+#include "apeIIndexedLineSetGeometry.h"
+#include "apeILight.h"
+#include "apeILogManager.h"
+#include "apeIManualMaterial.h"
+#include "apeINode.h"
+#include "apeIPlaneGeometry.h"
+#include "apeIPointCloud.h"
+#include "apeISceneManager.h"
+#include "apeISceneNetwork.h"
+#include "apeISphereGeometry.h"
+#include "apeITextGeometry.h"
+#include "apeITubeGeometry.h"
+#include "apeInterpolator.h"
+#include "apePluginAPI.h"
+#include "apeUtils.h"
 #include <chrono>
 #include <iostream>
 #include <list>
@@ -31,27 +55,6 @@ SOFTWARE.*/
 #include <random>
 #include <thread>
 #include <vector>
-#include "apePluginAPI.h"
-#include "apeIEventManager.h"
-#include "apeILogManager.h"
-#include "apeISceneManager.h"
-#include "apeISceneNetwork.h"
-#include "apeICoreConfig.h"
-#include "apeICamera.h"
-#include "apeIConeGeometry.h"
-#include "apeIFileGeometry.h"
-#include "apeIFileMaterial.h"
-#include "apeIIndexedFaceSetGeometry.h"
-#include "apeIIndexedLineSetGeometry.h"
-#include "apeILight.h"
-#include "apeIManualMaterial.h"
-#include "apeINode.h"
-#include "apeIPlaneGeometry.h"
-#include "apeIPointCloud.h"
-#include "apeISphereGeometry.h"
-#include "apeITextGeometry.h"
-#include "apeITubeGeometry.h"
-#include "apeInterpolator.h"
 
 #define THIS_PLUGINNAME "apeHelloWorldScenePlugin"
 
@@ -66,19 +69,19 @@ namespace ape
 
 		ape::ICoreConfig* mpCoreConfig;
 
-		ape::NodeWeakPtr mPlanetNode;
+		ape::CommandWeakPtr mCommand;
 
-		ape::NodeWeakPtr mTextNode;
+		std::string mGuid;
 
-		ape::EntityWeakPtr mTextEntity;
-
-		int mCounter;
+		std::string mUserName;
 
 		bool mIsHost;
 
-		void eventCallBack(const ape::Event& event);
+		bool mIsStopped;
 
-		ape::PointCloudWeakPtr mPointCloud;
+		std::mutex stopMutex;
+
+		void eventCallBack(const ape::Event& event);
 
 	public:
 		apeHelloWorldScenePlugin();
@@ -103,7 +106,7 @@ namespace ape
 		return new ape::apeHelloWorldScenePlugin;
 	}
 
-	APE_PLUGIN_FUNC void DestroyapeHelloWorldScenePlugin(ape::IPlugin *plugin)
+	APE_PLUGIN_FUNC void DestroyapeHelloWorldScenePlugin(ape::IPlugin* plugin)
 	{
 		delete (ape::apeHelloWorldScenePlugin*)plugin;
 	}
