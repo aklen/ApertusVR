@@ -58,6 +58,28 @@ if(ANDROID)
     include("prepare_android.cmake")
 endif()
 
+
+set (CMAKEFILELIST
+    functions.cmake
+    prepare_cxx.cmake
+    prepare_cmake.cmake
+    prepare_ape.cmake
+)
+
+set (GITFILELIST
+    .gitignore
+)
+
+add_custom_target(
+    CustomCMakeFiles ALL
+    SOURCES ${CMAKEFILELIST}
+)
+
+add_custom_target(
+    GitFiles ALL
+    SOURCES ${GITFILELIST}
+)
+
 include_directories("include")
 add_subdirectory(include)
 add_subdirectory(core)
