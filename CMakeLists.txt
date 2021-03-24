@@ -70,6 +70,11 @@ set (GITFILELIST
     .gitignore
 )
 
+set (DOCKERFILELIST
+    .dockerignore
+    Dockerfile
+)
+
 add_custom_target(
     CustomCMakeFiles ALL
     SOURCES ${CMAKEFILELIST}
@@ -78,6 +83,11 @@ add_custom_target(
 add_custom_target(
     GitFiles ALL
     SOURCES ${GITFILELIST}
+)
+
+add_custom_target(
+    DockerFiles ALL
+    SOURCES ${DOCKERFILELIST}
 )
 
 include_directories("include")
@@ -91,7 +101,7 @@ if(WIN32)
 elseif(ANDORID)
     add_subdirectory(plugins)
     add_subdirectory(macros)
-elseif(APPLE)
+elseif(APPLE OR LINUX)
     add_subdirectory(plugins/scene/helloWorldScene)
     add_subdirectory(macros/sceneMaker)
     add_subdirectory(samples/helloWorld)
