@@ -29,7 +29,7 @@ include_directories(
 	${PROJECT_SOURCE_DIR}/core/pluginManager
 	${PROJECT_SOURCE_DIR}/core/eventManager
 	${PROJECT_SOURCE_DIR}/core/logManager
-	${PROJECT_SOURCE_DIR}/core/CoreConfig
+	${PROJECT_SOURCE_DIR}/core/coreConfig
 	${PROJECT_SOURCE_DIR}/core/mainWindow
 	${PROJECT_SOURCE_DIR}/core/sceneManager
 	${RAKNET_INCLUDE_DIR}	
