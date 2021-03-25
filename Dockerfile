@@ -34,4 +34,5 @@ RUN make
 
 FROM build as release
 WORKDIR /home/ApertusVR-build/bin
-RUN ./apeSampleLauncher ../../ApertusVR/samples/helloWorld/
+COPY ["/home/ApertusVR/utilities/scripts/ape_autorestart.sh", "./"]
+CMD [ "./ape_autorestart.sh", "./apeSampleLauncher", "/home/ApertusVR/samples/helloWorld/" ]
