@@ -13,6 +13,7 @@ bld/
 [Bb]in/
 [Ll]og/
 build/
+lib/
 node_modules/
 
 # IDE settings / project files
@@ -21,7 +22,6 @@ node_modules/
 *.pbxproj
 *.env
 .git
-.gitignore
 *.patch
 
 # cmake
