@@ -67,9 +67,12 @@ ape::SceneManagerImpl::SceneManagerImpl()
 
 ape::SceneManagerImpl::~SceneManagerImpl()
 {
+	APE_LOG_FUNC_ENTER();
 	mNodes.clear();
 	mEntities.clear();
 	delete (ape::SceneNetworkImpl*)mpSceneNetwork;
+	mpSceneNetwork = nullptr;
+	APE_LOG_FUNC_LEAVE();
 }
 
 ape::NodeWeakPtrNameMap ape::SceneManagerImpl::getNodes()
