@@ -101,6 +101,8 @@ namespace ape
 
 		ape::SceneNetwork::ParticipantType mParticipantType;
 
+		ape::NetworkConfig::Selected mSelectedNetwork;
+
 		bool mIsConnectedToNATServer;
 		
 		bool mIsReplicaHost;
