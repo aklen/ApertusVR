@@ -35,7 +35,9 @@ SOFTWARE.*/
 #endif
 
 #include <iostream>
+#include <mutex>
 #include <thread>
+#include <condition_variable>
 #include <memory>
 #include <chrono>
 #include "apeISceneNetwork.h"
@@ -98,6 +100,16 @@ namespace ape
 		std::string mLobbyServerPort;
 
 		std::string mLobbyServerSessionName;
+
+		std::mutex mRackReplicaPeerMutex;
+
+		std::condition_variable mRackReplicaPeerCV;
+
+		std::thread mRunReplicaPeerListenThread;
+
+		bool mDestructionBegun;
+
+		bool mReplicaPeerListenReady;
 
 		ape::SceneNetwork::ParticipantType mParticipantType;
 

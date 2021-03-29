@@ -33,6 +33,8 @@ ape::SceneNetworkImpl::SceneNetworkImpl()
 {
 	APE_LOG_FUNC_ENTER();
 	msSingleton = this;
+	mDestructionBegun = false;
+	mReplicaPeerListenReady = false;
 	mpCoreConfig = ape::ICoreConfig::getSingletonPtr();
 	mpEventManager = ape::IEventManager::getSingletonPtr();
 	mpSceneManager = ape::ISceneManager::getSingletonPtr();
@@ -103,14 +105,40 @@ ape::SceneNetworkImpl::SceneNetworkImpl()
 
 ape::SceneNetworkImpl::~SceneNetworkImpl()
 {
+	APE_LOG_FUNC_ENTER();
+	mDestructionBegun = true;
+
+	APE_LOG_DEBUG("before mReplicaPeerListenReady");
+	std::unique_lock<std::mutex> lk(mRackReplicaPeerMutex);
+	while(!mReplicaPeerListenReady)
+	{
+		mRackReplicaPeerCV.wait(lk);
+	}
+	APE_LOG_DEBUG("after mReplicaPeerListenReady");
+
+	APE_LOG_DEBUG("before delete mpRakReplicaPeer");
 	if (mpRakReplicaPeer)
 	{
-		mpRakReplicaPeer->Shutdown(100);
-		RakNet::RakPeerInterface::DestroyInstance(mpRakReplicaPeer);
+		// try
+		// {
+		// 	mpRakReplicaPeer->CloseConnection()
+		// 	mpRakReplicaPeer->Shutdown(100);
+		// }
+		// catch(const std::exception& e)
+		// {
+		// 	std::cout << e.what() << '\n';
+		// 	APE_LOG_ERROR("Error: " << e.what());
+		// }
+
+		// RakNet::RakPeerInterface::DestroyInstance(mpRakReplicaPeer);
+		delete mpRakReplicaPeer;
+		mpRakReplicaPeer = nullptr;
 	}
+	APE_LOG_DEBUG("after delete mpRakReplicaPeer");
 
 	if (mpNatPunchthroughClient)
 		RakNet::NatPunchthroughClient::DestroyInstance(mpNatPunchthroughClient);
+	APE_LOG_DEBUG("after RakNet::NatPunchthroughClient::DestroyInstance(mpNatPunchthroughClient)");
 
 	if (mpLobbyManager)
 	{
@@ -120,6 +148,9 @@ ape::SceneNetworkImpl::~SceneNetworkImpl()
 		delete mpLobbyManager;
 		mpLobbyManager = nullptr;
 	}
+	APE_LOG_DEBUG("after destroying pLobbyManager");
+
+	APE_LOG_FUNC_LEAVE();
 }
 
 void ape::SceneNetworkImpl::eventCallBack(const ape::Event & event)
@@ -200,17 +231,18 @@ void ape::SceneNetworkImpl::init()
 		else
 		{
 			APE_LOG_DEBUG("Try to connect to NAT punchthrough server: " << mNATServerIP << "|" << mNATServerPort);
-			while (!mIsConnectedToNATServer)
+			while (!mIsConnectedToNATServer && !mDestructionBegun)
 			{
 				listenReplicaPeer();
 				std::this_thread::sleep_for(std::chrono::milliseconds(100));
 			}
+			APE_LOG_DEBUG("Try to connect to NAT punchthrough server: " << mNATServerIP << "|" << mNATServerPort);
 		}
 	}
 	APE_LOG_DEBUG("runReplicaPeerListenThread");
-	std::thread runReplicaPeerListenThread((std::bind(&SceneNetworkImpl::runReplicaPeerListen, this)));
-	runReplicaPeerListenThread.detach();
-	if (mpCoreConfig->getNetworkConfig().selected == ape::NetworkConfig::LAN && mpCoreConfig->getNetworkConfig().lanConfig.hostStreamPort.length())
+	mRunReplicaPeerListenThread = std::thread((std::bind(&SceneNetworkImpl::runReplicaPeerListen, this)));
+    mRunReplicaPeerListenThread.detach();
+	if (mSelectedNetwork == ape::NetworkConfig::LAN && mpCoreConfig->getNetworkConfig().lanConfig.hostStreamPort.length())
 	{
 		mpRakStreamPeer = RakNet::RakPeerInterface::GetInstance();
 		int socketFamily;
@@ -366,15 +398,21 @@ std::string ape::SceneNetworkImpl::getCurrentRoomName()
 
 void ape::SceneNetworkImpl::runReplicaPeerListen()
 {
-	while (true)
+	std::unique_lock<std::mutex> lk(mRackReplicaPeerMutex);
+	while (!mDestructionBegun)
 	{
 		listenReplicaPeer();
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 	}
+	mReplicaPeerListenReady = true;
+	std::notify_all_at_thread_exit(mRackReplicaPeerCV, std::move(lk));
 }
 
 void ape::SceneNetworkImpl::listenReplicaPeer()
 {
+	if (!mpRakReplicaPeer)
+		return;
+
 	RakNet::Packet *packet;
 	for (packet = mpRakReplicaPeer->Receive(); packet; mpRakReplicaPeer->DeallocatePacket(packet), packet = mpRakReplicaPeer->Receive())
 	{
