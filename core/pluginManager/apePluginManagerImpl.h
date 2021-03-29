@@ -66,6 +66,8 @@ namespace ape
 
 		unsigned int mPluginCount;
 
+		std::mutex mThreadVectorMutex;
+
 	public:
 		PluginManagerImpl();
 

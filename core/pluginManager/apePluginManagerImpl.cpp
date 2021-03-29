@@ -37,22 +37,22 @@ ape::PluginManagerImpl::PluginManagerImpl()
 
 ape::PluginManagerImpl::~PluginManagerImpl()
 {
-	
 }
 
 void ape::PluginManagerImpl::loadPlugin(std::string name)
 {
 	APE_LOG_FUNC_ENTER();
+	std::lock_guard<std::mutex> guard(mThreadVectorMutex);
 	if (mpInternalPluginManager->Load(name))
 	{
 		ape::IPlugin* plugin = ape::PluginFactory::CreatePlugin(name);
 		mPluginVector.push_back(plugin);
 		mPluginCount++;
-		APE_LOG_DEBUG("Plugin loaded: " << name);
-		std::thread pluginThread = std::thread(&PluginManagerImpl::InitAndRunPlugin, this, plugin);
+		APE_LOG_DEBUG("Creating plugin thread for: " << name);
+//		std::thread pluginThread = std::thread(&PluginManagerImpl::InitAndRunPlugin, this, plugin);
 		//TODO detach or join based on the ape::System::Start isBlocked param
-		//mThreadVector.push_back(pluginThread);
-		pluginThread.detach();
+		// pluginThread.detach();
+		mThreadVector.push_back(std::thread(&PluginManagerImpl::InitAndRunPlugin, this, plugin));
 	}
 	else
 	{
@@ -63,6 +63,7 @@ void ape::PluginManagerImpl::loadPlugin(std::string name)
 
 void ape::PluginManagerImpl::CreatePlugin(std::string pluginname)
 {
+	std::lock_guard<std::mutex> guard(mThreadVectorMutex);
 	mPluginVector.push_back(ape::PluginFactory::CreatePlugin(pluginname));
 }
 
@@ -94,7 +95,7 @@ void ape::PluginManagerImpl::callStepFunc()
 {
     for (auto const& plugin : mPluginVector)
     {
-            plugin->Step();
+		plugin->Step();
     }
 }
 //callStepFunc
@@ -120,35 +121,57 @@ void ape::PluginManagerImpl::InitAndRunPlugin(ape::IPlugin* plugin)
 
 void ape::PluginManagerImpl::StopPlugins()
 {
-	for (auto const& plugin : mPluginVector)
+	APE_LOG_FUNC_ENTER();
+//	for (auto const& plugin : mPluginVector)
+//	{
+//		plugin->Stop();
+//	}
+
+	std::lock_guard<std::mutex> guard(mThreadVectorMutex);
+	for (int i = 0; i < mPluginVector.size(); i++)
 	{
-		plugin->Stop();
+		mPluginVector.at(i)->Stop();
+		if (mThreadVector.at(i).joinable())
+		{
+			APE_LOG_DEBUG("plugin is joinable, calling join()");
+			mThreadVector.at(i).join();
+		}
 	}
+
+	// TODO: wait here untiil each plugin / thread has stopped
+	APE_LOG_DEBUG("each plugin has stopped");
+	APE_LOG_FUNC_LEAVE();
 }
 
 void ape::PluginManagerImpl::InitAndRunPlugins()
 {
 	APE_LOG_FUNC_ENTER();
+	std::lock_guard<std::mutex> guard(mThreadVectorMutex);
 	for (std::vector<ape::IPlugin*>::iterator it = mPluginVector.begin(); it != mPluginVector.end(); ++it)
 	{
 		mThreadVector.push_back(std::thread(&PluginManagerImpl::InitAndRunPlugin, this, (*it)));
 	}
-	APE_LOG_FUNC_ENTER();
+	APE_LOG_FUNC_LEAVE();
 }
 
 void ape::PluginManagerImpl::registerUserThreadFunction(std::function<void()> userThreadFunction)
 {
+	std::lock_guard<std::mutex> guard(mThreadVectorMutex);
 	mThreadVector.push_back(std::thread(userThreadFunction));
 }
 
 void ape::PluginManagerImpl::joinThreads()
 {
+	std::lock_guard<std::mutex> guard(mThreadVectorMutex);
 	std::for_each(mThreadVector.begin(), mThreadVector.end(), std::mem_fn(&std::thread::join));
+//	 std::for_each(mThreadVector.begin(), mThreadVector.end(), [](std::thread &thr){ if (thr.joinable()) thr.join(); });
 }
 
 void ape::PluginManagerImpl::detachThreads()
 {
+	std::lock_guard<std::mutex> guard(mThreadVectorMutex);
 	std::for_each(mThreadVector.begin(), mThreadVector.end(), std::mem_fn(&std::thread::detach));
+//	 std::for_each(mThreadVector.begin(), mThreadVector.end(), [](std::thread &thr){ thr.detach(); });
 }
 
 unsigned int ape::PluginManagerImpl::getPluginCount()
