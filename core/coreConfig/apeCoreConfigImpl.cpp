@@ -32,6 +32,7 @@ SOFTWARE.*/
 #include "rapidjson/filewritestream.h"
 #include "rapidjson/prettywriter.h"
 #include "apeCoreConfigImpl.h"
+#include "apeILogManager.h"
 #ifdef ANDROID
 #include "apeAndroidAssetOpen.h"
 #endif
@@ -46,15 +47,15 @@ ape::CoreConfigImpl::CoreConfigImpl(std::string configFolderPath)
 #ifndef ANDROID
 	if (stat(mConfigFolderPath.c_str(), &info) != 0)
 	{
-		std::cout << "CoreConfigImpl: cannot access to " << mConfigFolderPath << std::endl;
+		APE_LOG_ERROR("Cannot access to " << mConfigFolderPath);
 	}
 	else if (info.st_mode & S_IFDIR)
 	{
-		std::cout << "CoreConfigImpl: loading config files from " << mConfigFolderPath << std::endl;
+		APE_LOG_INFO("Loading config files from " << mConfigFolderPath);
 	}
 	else
 	{
-		std::cout << "CoreConfigImpl: no directory at " << mConfigFolderPath << std::endl;
+		APE_LOG_WARNING("No directory at " << mConfigFolderPath);
 	}
 #endif
 
@@ -223,7 +224,7 @@ ape::CoreConfigImpl::CoreConfigImpl(std::string configFolderPath)
 		}
 		else
 		{
-			std::cout << "Error: syntax error in json document " << fileFullPath.str() << std::endl;
+			APE_LOG_ERROR("Syntax error in json document " << fileFullPath.str());
 		}
 		fclose(apeCoreConfigFile);
 	}
