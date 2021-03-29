@@ -49,7 +49,7 @@ SOFTWARE.*/
 	#ifdef WIN32   //WINDOWS
 		#define __FUNCTION_NAME__   __FUNCTION__
 	#else          //*NIX
-		#define __FUNCTION_NAME__   __func__
+		#define __FUNCTION_NAME__   __PRETTY_FUNCTION__
 	#endif
 #endif
 
