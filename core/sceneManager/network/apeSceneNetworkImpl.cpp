@@ -50,12 +50,11 @@ ape::SceneNetworkImpl::SceneNetworkImpl()
 
 	ape::NetworkConfig::LobbyConfig lobbyServerConfig = mpCoreConfig->getNetworkConfig().lobbyConfig;
 	mLobbyServerIP = lobbyServerConfig.ip;
-	APE_LOG_DEBUG("mLobbyServerIP: " << mLobbyServerIP);
 	mLobbyServerPort = lobbyServerConfig.port;
-	APE_LOG_DEBUG("mLobbyServerPort: " << mLobbyServerPort);
+	APE_LOG_INFO("mLobbyServerIP: " << mLobbyServerIP << ":" << mLobbyServerPort);
 	if (!mLobbyServerSessionName.length())
 		mLobbyServerSessionName = lobbyServerConfig.roomName;
-	APE_LOG_DEBUG("mLobbyServerSessionName: " << mLobbyServerSessionName);
+	APE_LOG_INFO("mLobbyServerSessionName: " << mLobbyServerSessionName);
 	mpLobbyManager = new LobbyManager(mLobbyServerIP, mLobbyServerPort, mLobbyServerSessionName);
 
 	if (mpCoreConfig->getNetworkConfig().resourceZipUrl.size() && mpCoreConfig->getNetworkConfig().resourceDownloadLocation.size())
@@ -108,15 +107,15 @@ ape::SceneNetworkImpl::~SceneNetworkImpl()
 	APE_LOG_FUNC_ENTER();
 	mDestructionBegun = true;
 
-	APE_LOG_DEBUG("before mReplicaPeerListenReady");
+	APE_LOG_TRACE("before mReplicaPeerListenReady");
 	std::unique_lock<std::mutex> lk(mRackReplicaPeerMutex);
 	while(!mReplicaPeerListenReady)
 	{
 		mRackReplicaPeerCV.wait(lk);
 	}
-	APE_LOG_DEBUG("after mReplicaPeerListenReady");
+	APE_LOG_TRACE("after mReplicaPeerListenReady");
 
-	APE_LOG_DEBUG("before delete mpRakReplicaPeer");
+	APE_LOG_TRACE("before delete mpRakReplicaPeer");
 	if (mpRakReplicaPeer)
 	{
 		// try
@@ -134,11 +133,11 @@ ape::SceneNetworkImpl::~SceneNetworkImpl()
 		delete mpRakReplicaPeer;
 		mpRakReplicaPeer = nullptr;
 	}
-	APE_LOG_DEBUG("after delete mpRakReplicaPeer");
+	APE_LOG_TRACE("after delete mpRakReplicaPeer");
 
 	if (mpNatPunchthroughClient)
 		RakNet::NatPunchthroughClient::DestroyInstance(mpNatPunchthroughClient);
-	APE_LOG_DEBUG("after RakNet::NatPunchthroughClient::DestroyInstance(mpNatPunchthroughClient)");
+	APE_LOG_TRACE("after RakNet::NatPunchthroughClient::DestroyInstance(mpNatPunchthroughClient)");
 
 	if (mpLobbyManager)
 	{
@@ -148,7 +147,7 @@ ape::SceneNetworkImpl::~SceneNetworkImpl()
 		delete mpLobbyManager;
 		mpLobbyManager = nullptr;
 	}
-	APE_LOG_DEBUG("after destroying pLobbyManager");
+	APE_LOG_TRACE("after destroying pLobbyManager");
 
 	APE_LOG_FUNC_LEAVE();
 }
@@ -219,7 +218,7 @@ void ape::SceneNetworkImpl::init()
 	mpCoreConfig->setNetworkGUID(mGuid.ToString());
 
 	mAddress = mpRakReplicaPeer->GetSystemAddressFromGuid(mGuid);
-	APE_LOG_DEBUG("Our guid is: " << mGuid.ToString());
+	APE_LOG_INFO("Our guid is: " << mGuid.ToString());
 	APE_LOG_DEBUG("Started on: " << mAddress.ToString(true));
 	if (mSelectedNetwork == ape::NetworkConfig::INTERNET)
 	{
