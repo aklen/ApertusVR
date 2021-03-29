@@ -39,9 +39,10 @@ ape::CoreConfigImpl* gpCoreConfigImpl;
 
 void ape::System::Start(const char* configFolderPath, bool isBlocking, std::function<void()> userThreadFunction, int step_interval)
 {
-	std::cout << "apertusVR - Your open source AR/VR engine for science, education and industry" << std::endl;
-	std::cout << "Build Target Platform: " << APE_PLATFORM_STRING << std::endl;
 	gpLogManagerImpl = new LogManagerImpl();
+	APE_LOG("ApertusVR - Your open source AR/VR engine for science, education and industry");
+	APE_LOG("Build Target Platform: " << APE_PLATFORM_STRING);
+	APE_LOG("-----------------------------------------------------------------------------");
 	gpCoreConfigImpl = new CoreConfigImpl(std::string(configFolderPath));
 	gpEventManagerImpl = new EventManagerImpl();
 	gpSceneManagerImpl = new SceneManagerImpl();
@@ -57,7 +58,7 @@ void ape::System::Start(const char* configFolderPath, bool isBlocking, std::func
 		gpPluginManagerImpl->joinThreads();
 	else
 		gpPluginManagerImpl->detachThreads();
-	std::cout << "ape::System::Start() after joinThreads() || detachThreads()" << std::endl;
+	APE_LOG_TRACE("ape::System::Start() after joinThreads() || detachThreads()");
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(step_interval));
 	gpPluginManagerImpl->callStepFunc();
@@ -65,9 +66,7 @@ void ape::System::Start(const char* configFolderPath, bool isBlocking, std::func
 
 void ape::System::Stop()
 {
-	std::cout << "ape::System::Stop() Enter function" << std::endl;
 	gpPluginManagerImpl->StopPlugins();
-	std::cout << "ape::System::Stop() after StopPlugins()" << std::endl;
 
 	// original order: EventManager, SceneManager, PluginManager, CoreConfig, LogManager
 	// new order: PluginManager, EventManager, SceneManager, CoreConfig, LogManager
@@ -77,35 +76,33 @@ void ape::System::Stop()
 		delete gpPluginManagerImpl;
 		gpPluginManagerImpl = nullptr;
 	}
-	std::cout << "ape::System::Stop() after deleted PluginManager" << std::endl;
+	APE_LOG_INFO("PluginManager deleted");
 
 	if (gpEventManagerImpl)
 	{
 		delete gpEventManagerImpl;
 		gpEventManagerImpl = nullptr;
 	}
-	std::cout << "ape::System::Stop() after deleted EventManager" << std::endl;
+	APE_LOG_INFO("EventManager deleted");
 
 	if (gpSceneManagerImpl)
 	{
 		delete gpSceneManagerImpl;
 		gpSceneManagerImpl = nullptr;
 	}
-	std::cout << "ape::System::Stop() after deleted SceneManager" << std::endl;
+	APE_LOG_INFO("SceneManager deleted");
 
 	if (gpCoreConfigImpl)
 	{
 		delete gpCoreConfigImpl;
 		gpCoreConfigImpl = nullptr;
 	}
-	std::cout << "ape::System::Stop() after deleted CoreConfig" << std::endl;
+	APE_LOG_INFO("CoreConfig deleted");
 
 	if (gpLogManagerImpl)
 	{
 		delete gpLogManagerImpl;
 		gpLogManagerImpl = nullptr;
 	}
-	std::cout << "ape::System::Stop() after deleted LogManager" << std::endl;
-
-	std::cout << "ape::System::Stop() Leave function" << std::endl;
+	APE_LOG_INFO("LogManager deleted");
 }
