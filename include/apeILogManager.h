@@ -45,21 +45,24 @@ SOFTWARE.*/
 #include <string>
 #include "apeSingleton.h"
 
-#ifndef __FUNCTION_NAME__
+// #define APE_LOG_ENABLE_FUNCNAME
+#if defined APE_LOG_ENABLE_FUNCNAME && !defined __FUNCTION_NAME__
 	#ifdef WIN32   //WINDOWS
 		#define __FUNCTION_NAME__   __FUNCTION__
 	#else          //*NIX
-		#define __FUNCTION_NAME__   __PRETTY_FUNCTION__
+		#define __FUNCTION_NAME__   __FUNCTION__
 	#endif
+#else
+	#define __FUNCTION_NAME__ ""
 #endif
 
 #define APE_LOG_ENABLE_INFO
 #define APE_LOG_ENABLE_DEBUG
-#define APE_LOG_ENABLE_TRACE
+// #define APE_LOG_ENABLE_TRACE
 #define APE_LOG_ENABLE_WARNING
 #define APE_LOG_ENABLE_ERROR
 #ifndef __ANDROID__
-#define APE_LOG_ENABLE_COLORIZE
+	#define APE_LOG_ENABLE_COLORIZE
 #endif
 
 #define COLOR_ORANGE "\033[0;33m"
@@ -83,7 +86,7 @@ SOFTWARE.*/
 
 #define APE_LOG_FILE_WIDTH 31
 #define APE_LOG_LINE_WIDTH 5
-#define APE_LOG_FUNC_WIDTH 45
+#define APE_LOG_FUNC_WIDTH 15
 #define APE_LOG_FILL(WIDTH) std::setfill(' ') << std::setw(WIDTH)
 
 #define APE_LOG_WRITE(LEVEL, SS) { std::stringstream superStringStream; superStringStream << SS << APE_LOG_LINE_END; ape::ILogManager::getSingletonPtr()->log(superStringStream, LEVEL); }
@@ -93,17 +96,27 @@ SOFTWARE.*/
 #endif
 
 #ifdef APE_LOG_ENABLE_COLORIZE
-	#define APE_LOG_LEVEL(LEVEL, SS) \
-		APE_LOG_WRITE(LEVEL, COLOR_LIGHT_CYAN << "LN " << APE_LOG_FILL(APE_LOG_LINE_WIDTH) << __LINE__ << COLOR_TERM \
-				  << APE_LOG_DELIMITER << COLOR_LIGHT_YELLOW << APE_LOG_FILL(APE_LOG_FUNC_WIDTH) << __FUNCTION_NAME__ << COLOR_TERM \
-				  << APE_LOG_DELIMITER << SS \
-		);
+	#ifndef APE_LOG_ENABLE_FUNCNAME
+		#define APE_LOG_LEVEL(LEVEL, SS) \
+			APE_LOG_WRITE(LEVEL, SS);
+	#else
+		#define APE_LOG_LEVEL(LEVEL, SS) \
+			APE_LOG_WRITE(LEVEL, COLOR_LIGHT_CYAN << "LN " << APE_LOG_FILL(APE_LOG_LINE_WIDTH) << __LINE__ << COLOR_TERM \
+					<< APE_LOG_DELIMITER << COLOR_LIGHT_YELLOW << APE_LOG_FILL(APE_LOG_FUNC_WIDTH) << __FUNCTION_NAME__ << COLOR_TERM \
+					<< APE_LOG_DELIMITER << SS \
+			);
+	#endif
 #else
-	#define APE_LOG_LEVEL(LEVEL, SS) \
-		APE_LOG_WRITE(LEVEL, "LN " << APE_LOG_FILL(APE_LOG_LINE_WIDTH) << __LINE__ \
-				  << APE_LOG_DELIMITER << APE_LOG_FILL(APE_LOG_FUNC_WIDTH) << __FUNCTION_NAME__ \
-				  << APE_LOG_DELIMITER << SS \
-		);
+	#ifndef APE_LOG_ENABLE_FUNCNAME
+		#define APE_LOG_LEVEL(LEVEL, SS) \
+			APE_LOG_WRITE(LEVEL, SS);
+	#else
+		#define APE_LOG_LEVEL(LEVEL, SS) \
+			APE_LOG_WRITE(LEVEL, "LN " << APE_LOG_FILL(APE_LOG_LINE_WIDTH) << __LINE__ \
+					<< APE_LOG_DELIMITER << APE_LOG_FILL(APE_LOG_FUNC_WIDTH) << __FUNCTION_NAME__ \
+					<< APE_LOG_DELIMITER << SS \
+			);
+	#endif
 #endif
 
 #ifdef APE_LOG_LEVEL
