@@ -65,11 +65,47 @@ void ape::System::Start(const char* configFolderPath, bool isBlocking, std::func
 
 void ape::System::Stop()
 {
+	std::cout << "ape::System::Stop() Enter function" << std::endl;
 	gpPluginManagerImpl->StopPlugins();
-	delete gpEventManagerImpl;
-	delete gpSceneManagerImpl;
-	delete gpPluginManagerImpl;
-	delete gpCoreConfigImpl;
-	delete gpLogManagerImpl;
-}
+	std::cout << "ape::System::Stop() after StopPlugins()" << std::endl;
 
+	// original order: EventManager, SceneManager, PluginManager, CoreConfig, LogManager
+	// new order: PluginManager, EventManager, SceneManager, CoreConfig, LogManager
+
+	if (gpPluginManagerImpl)
+	{
+		delete gpPluginManagerImpl;
+		gpPluginManagerImpl = nullptr;
+	}
+	std::cout << "ape::System::Stop() after deleted PluginManager" << std::endl;
+
+	if (gpEventManagerImpl)
+	{
+		delete gpEventManagerImpl;
+		gpEventManagerImpl = nullptr;
+	}
+	std::cout << "ape::System::Stop() after deleted EventManager" << std::endl;
+
+	if (gpSceneManagerImpl)
+	{
+		delete gpSceneManagerImpl;
+		gpSceneManagerImpl = nullptr;
+	}
+	std::cout << "ape::System::Stop() after deleted SceneManager" << std::endl;
+
+	if (gpCoreConfigImpl)
+	{
+		delete gpCoreConfigImpl;
+		gpCoreConfigImpl = nullptr;
+	}
+	std::cout << "ape::System::Stop() after deleted CoreConfig" << std::endl;
+
+	if (gpLogManagerImpl)
+	{
+		delete gpLogManagerImpl;
+		gpLogManagerImpl = nullptr;
+	}
+	std::cout << "ape::System::Stop() after deleted LogManager" << std::endl;
+
+	std::cout << "ape::System::Stop() Leave function" << std::endl;
+}
