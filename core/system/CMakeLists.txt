@@ -54,7 +54,7 @@ else()
 			apeCoreConfig
 			apeJNIPlugin
 			apeAndroidSampleScenePlugin
-            apeSampleScenePlugin
+			apeSampleScenePlugin
 			)
 endif()
 
