@@ -46,18 +46,21 @@ void ape::System::Start(const char* configFolderPath, bool isBlocking, std::func
 	gpEventManagerImpl = new EventManagerImpl();
 	gpSceneManagerImpl = new SceneManagerImpl();
 	gpPluginManagerImpl = new PluginManagerImpl();
+
 	gpPluginManagerImpl->CreatePlugins();
 	gpPluginManagerImpl->InitAndRunPlugins();
+
 	if (userThreadFunction)
 		gpPluginManagerImpl->registerUserThreadFunction(userThreadFunction);
+
 	if (isBlocking)
 		gpPluginManagerImpl->joinThreads();
 	else
 		gpPluginManagerImpl->detachThreads();
-    
-    std::this_thread::sleep_for(std::chrono::milliseconds(step_interval));
-    gpPluginManagerImpl->callStepFunc();
-        
+	std::cout << "ape::System::Start() after joinThreads() || detachThreads()" << std::endl;
+
+	std::this_thread::sleep_for(std::chrono::milliseconds(step_interval));
+	gpPluginManagerImpl->callStepFunc();
 }
 
 void ape::System::Stop()
