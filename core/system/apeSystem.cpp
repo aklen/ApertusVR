@@ -66,7 +66,9 @@ void ape::System::Start(const char* configFolderPath, bool isBlocking, std::func
 
 void ape::System::Stop()
 {
+	APE_LOG_INFO("ape::System::Stop()");
 	gpPluginManagerImpl->StopPlugins();
+	APE_LOG_INFO("ape::System::Stop() after StopPlugins()");
 
 	// original order: EventManager, SceneManager, PluginManager, CoreConfig, LogManager
 	// new order: PluginManager, EventManager, SceneManager, CoreConfig, LogManager
