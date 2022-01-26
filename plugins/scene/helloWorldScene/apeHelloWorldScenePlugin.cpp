@@ -158,7 +158,7 @@ void ape::apeHelloWorldScenePlugin::Run()
 		std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 		std::string inputCmd;
 		std::string userToRun;
-		while (true)
+		while (!mIsStopped)
 		{
 			// std::cout << std::endl << ape::utils::getCurrentPath();
 			std::cout << std::endl;
