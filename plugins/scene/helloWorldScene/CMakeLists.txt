@@ -20,27 +20,17 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-#error function
-function (reportError what and when)
-	if (${${when}})
-		message (${${what}})
-	endif ()
-endfunction ()
-#
-
 # Add all header and cpp files in the directory to the project
 set (HEADERS
 	apeHelloWorldScenePlugin.h
-	)
+)
 
 set (SOURCES 
 	apeHelloWorldScenePlugin.cpp
-	)
+)
 
-include_directories(
-	
-	
-	)
+include_directories(	
+)
 
 add_library (apeHelloWorldScenePlugin SHARED ${SOURCES} ${HEADERS})
 
@@ -54,7 +44,3 @@ endif ()
 set_property (TARGET apeHelloWorldScenePlugin PROPERTY COMPILE_DEFINITIONS APE_SOURCE_DIR="${APE_SOURCE_DIR}")
 
 set_property (TARGET apeHelloWorldScenePlugin PROPERTY FOLDER "Plugins/Scene")
-
-
-
-

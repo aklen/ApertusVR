@@ -43,7 +43,14 @@ SOFTWARE.*/
 		#define APE_PLATFORM_STRING "Apple - iOS device"
 	#elif TARGET_OS_MAC
 		#define APE_PLATFORM_APPLE_MACOS
-		#define APE_PLATFORM_STRING "Apple - MacOS"
+		
+		#if defined(__arm64__)
+			#define APE_PLATFORM_STRING "Apple M1 - MacOS"
+		#elif defined(__x86_64__)
+			#define APE_PLATFORM_STRING "Apple X86/64 - MacOS"
+		#else
+			#define APE_PLATFORM_STRING "Apple - MacOS"
+		#endif
 	#else
 		#define APE_PLATFORM_APPLE_UNKNOWN
 		#define APE_PLATFORM_STRING "Apple - Unknown"
