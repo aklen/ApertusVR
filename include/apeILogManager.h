@@ -47,13 +47,15 @@ SOFTWARE.*/
 
 // #define APE_LOG_ENABLE_FUNCNAME
 #if defined APE_LOG_ENABLE_FUNCNAME && !defined __FUNCTION_NAME__
-	#ifdef WIN32   //WINDOWS
-		#define __FUNCTION_NAME__   __FUNCTION__
-	#else          //*NIX
-		#define __FUNCTION_NAME__   __FUNCTION__
-	#endif
+    #if defined(_WIN32)  // Windows
+        #define __FUNCTION_NAME__ __FUNCTION__
+    #elif defined(__APPLE__)  // Apple (macOS, iOS, etc.)
+        #define __FUNCTION_NAME__ __func__
+    #else  // Linux, Unix, stb.
+        #define __FUNCTION_NAME__ __FUNCTION__
+    #endif
 #else
-	#define __FUNCTION_NAME__ ""
+    #define __FUNCTION_NAME__ ""
 #endif
 
 #define APE_LOG_ENABLE_INFO
@@ -89,7 +91,16 @@ SOFTWARE.*/
 #define APE_LOG_FUNC_WIDTH 15
 #define APE_LOG_FILL(WIDTH) std::setfill(' ') << std::setw(WIDTH)
 
-#define APE_LOG_WRITE(LEVEL, SS) { std::stringstream superStringStream; superStringStream << SS << APE_LOG_LINE_END; ape::ILogManager::getSingletonPtr()->log(superStringStream, LEVEL); }
+#define APE_LOG_WRITE(LEVEL, SS) \
+    do { \
+        std::stringstream superStringStream; \
+        superStringStream << SS << APE_LOG_LINE_END; \
+        if (ape::ILogManager::getSingletonPtr()) { \
+            ape::ILogManager::getSingletonPtr()->log(superStringStream, LEVEL); \
+        } else { \
+            std::cerr << "[LOG ERROR] LogManager already deleted! Message: " << superStringStream.str(); \
+        } \
+    } while (0)
 
 #ifdef LOG
 	#undef LOG
