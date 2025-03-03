@@ -108,8 +108,14 @@ ape::SceneNetworkImpl::~SceneNetworkImpl()
 	mDestructionBegun = true;
 
 	APE_LOG_TRACE("before mReplicaPeerListenReady");
+
+	{
+        std::lock_guard<std::mutex> lock(mRackReplicaPeerMutex);
+        mReplicaPeerListenReady = true;
+    }
+
 	std::unique_lock<std::mutex> lk(mRackReplicaPeerMutex);
-	while(!mReplicaPeerListenReady)
+	while(mpRakReplicaPeer && !mReplicaPeerListenReady)
 	{
 		mRackReplicaPeerCV.wait(lk);
 	}
@@ -184,9 +190,22 @@ void ape::SceneNetworkImpl::eventCallBack(const ape::Event & event)
 
 void ape::SceneNetworkImpl::init()
 {
+	ape::NetworkConfig netConfig = mpCoreConfig->getNetworkConfig();
+	if (netConfig.selected == ape::NetworkConfig::NONE) 
+	{
+		APE_LOG_WARNING("No valid network configuration found. Skipping network initialization.");
+		return;
+	}
+
 	ape::NetworkConfig::NatPunchThroughConfig natPunchThroughServerConfig = mpCoreConfig->getNetworkConfig().natPunchThroughConfig;
 	mNATServerIP = natPunchThroughServerConfig.ip;
 	mNATServerPort = natPunchThroughServerConfig.port;
+	if (mNATServerIP == "" || mNATServerPort == "")
+	{
+		APE_LOG_ERROR("No valid NAT punchthrough server configuration found. Skipping network initialization.");
+		return;
+	}
+
 	ape::NetworkConfig::LanConfig localNetworkConfig = mpCoreConfig->getNetworkConfig().lanConfig;
 	mpRakReplicaPeer = RakNet::RakPeerInterface::GetInstance();
 	mpNetworkIDManager = RakNet::NetworkIDManager::GetInstance();
