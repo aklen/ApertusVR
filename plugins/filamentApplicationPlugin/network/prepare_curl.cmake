@@ -15,10 +15,8 @@ if (WIN32)
 	set(CURL_DLL_PATH_DEBUG ${CURL_BUILD_DIR}/lib/Debug/${CURL_DLL_FILENAME})
 	set(CURL_DLL_PATH_RELEASE ${CURL_BUILD_DIR}/lib/Release/${CURL_DLL_FILENAME})
 
-
 	set(CURL_LIB_PATH_DEBUG ${CURL_BUILD_DIR}/lib/Debug/${CURL_LIB_FILENAME})
 	set(CURL_LIB_PATH_RELEASE ${CURL_BUILD_DIR}/lib/Release/${CURL_LIB_FILENAME})
-
 
 	if (EXISTS ${CURL_LIB_PATH_DEBUG} AND EXISTS ${CURL_DLL_PATH_RELEASE})
 		set(CURL_READY TRUE)
@@ -75,10 +73,8 @@ elseif (APPLE)
     set(CURL_DLL_PATH_DEBUG ${CURL_BUILD_DIR}/lib/${CURL_DLL_FILENAME})
     set(CURL_DLL_PATH_RELEASE ${CURL_BUILD_DIR}/lib/${CURL_DLL_FILENAME})
 
-
     set(CURL_LIB_PATH_DEBUG ${CURL_BUILD_DIR}/lib/Debug/${CURL_LIB_FILENAME})
     set(CURL_LIB_PATH_RELEASE ${CURL_BUILD_DIR}/lib/Release/${CURL_LIB_FILENAME})
-
 
     if (EXISTS ${CURL_LIB_PATH_DEBUG} AND EXISTS ${CURL_DLL_PATH_RELEASE})
         set(CURL_READY TRUE)
@@ -120,8 +116,8 @@ elseif((LINUX AND NOT ANDROID))
     file(COPY ${CURL_LIB_PATH_RELEASE} DESTINATION ${APE_OUTPUT_DIR_RELEASE})
     find_package(CURL REQUIRED)
     include_directories(${CURL_INCLUDE_DIRS})
-    message(STATUS "curl dirs: ${CURL_INCLUDE_DIRS}")
-    message(STATUS "curl libs: ${CURL_LIBRARIES}")
+    message(STATUS "plugins/filamentApplicationPlugin/network/prepare_curl.cmake: curl dirs: ${CURL_INCLUDE_DIRS}")
+    message(STATUS "plugins/filamentApplicationPlugin/network/prepare_curl.cmake: curl libs: ${CURL_LIBRARIES}")
 
     if (${CURL_FOUND})
         set(CURL_READY TRUE)
