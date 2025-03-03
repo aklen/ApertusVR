@@ -59,11 +59,29 @@ if (WIN32)
 	file(COPY ${CURL_LIB_PATH_DEBUG} DESTINATION ${APE_OUTPUT_DIR_DEBUG})
 	file(COPY ${CURL_LIB_PATH_RELEASE} DESTINATION ${APE_OUTPUT_DIR_RELEASE})
 
-elseif (APPLE OR (LINUX AND NOT ANDROID))
+elseif (APPLE)
+	find_package(CURL REQUIRED)
+
+	set(CURL_INCLUDE_DIRS "${CMAKE_OSX_SYSROOT}/usr/include")
+	set(CURL_LIBRARIES "${CMAKE_OSX_SYSROOT}/usr/lib/libcurl.tbd")
+
+	include_directories(${CURL_INCLUDE_DIRS})
+
+	message(STATUS "core/SceneManager/Network/prepare_curl.cmake: [apple]: curl dirs: ${CURL_INCLUDE_DIRS}")
+	message(STATUS "core/SceneManager/Network/prepare_curl.cmake: [apple]: curl libs: ${CURL_LIBRARIES}")
+
+	if (${CURL_FOUND})
+		set(CURL_READY TRUE)
+		add_library(MY_CURL STATIC IMPORTED)
+		set_property(TARGET MY_CURL PROPERTY IMPORTED_LOCATION_DEBUG ${CURL_LIBRARIES})
+		set_property(TARGET MY_CURL PROPERTY IMPORTED_LOCATION_RELEASE ${CURL_LIBRARIES})
+	endif ()
+elseif (LINUX AND NOT ANDROID)
 	find_package(CURL REQUIRED)
 	include_directories(${CURL_INCLUDE_DIRS})
-	message(STATUS "curl dirs: ${CURL_INCLUDE_DIRS}")
-	message(STATUS "curl libs: ${CURL_LIBRARIES}")
+
+	message(STATUS "core/SceneManager/Network/prepare_curl.cmake: [linux]: curl dirs: ${CURL_INCLUDE_DIRS}")
+	message(STATUS "core/SceneManager/Network/prepare_curl.cmake: [linux]: curl libs: ${CURL_LIBRARIES}")
 
 	if (${CURL_FOUND})
 		set(CURL_READY TRUE)
