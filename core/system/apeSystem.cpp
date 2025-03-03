@@ -66,45 +66,51 @@ void ape::System::Start(const char* configFolderPath, bool isBlocking, std::func
 
 void ape::System::Stop()
 {
-	APE_LOG_INFO("ape::System::Stop()");
+	std::stringstream ssOut;
+	APE_LOG_INFO("ape::System::Stop() stopping plugins...");
 	gpPluginManagerImpl->StopPlugins();
-	APE_LOG_INFO("ape::System::Stop() after StopPlugins()");
-
-	// original order: EventManager, SceneManager, PluginManager, CoreConfig, LogManager
-	// new order: PluginManager, EventManager, SceneManager, CoreConfig, LogManager
+	APE_LOG_INFO("ape::System::Stop() plugins stopped");
 
 	if (gpPluginManagerImpl)
 	{
+		APE_LOG_TRACE("PluginManager deleting...");
 		delete gpPluginManagerImpl;
 		gpPluginManagerImpl = nullptr;
+		APE_LOG_INFO("PluginManager deleted");
 	}
-	APE_LOG_INFO("PluginManager deleted");
 
 	if (gpEventManagerImpl)
 	{
+		APE_LOG_TRACE("EventManager deleting...");
 		delete gpEventManagerImpl;
 		gpEventManagerImpl = nullptr;
+		APE_LOG_INFO("EventManager deleted");
 	}
-	APE_LOG_INFO("EventManager deleted");
 
 	if (gpSceneManagerImpl)
 	{
+		APE_LOG_TRACE("SceneManager deleting...");
 		delete gpSceneManagerImpl;
 		gpSceneManagerImpl = nullptr;
+		APE_LOG_INFO("SceneManager deleted");
 	}
-	APE_LOG_INFO("SceneManager deleted");
-
+	
 	if (gpCoreConfigImpl)
 	{
+		APE_LOG_TRACE("CoreConfig deleting...");
 		delete gpCoreConfigImpl;
 		gpCoreConfigImpl = nullptr;
+		APE_LOG_INFO("CoreConfig deleted");
 	}
-	APE_LOG_INFO("CoreConfig deleted");
 
 	if (gpLogManagerImpl)
 	{
+		APE_LOG_TRACE("LogManager deleting...");
 		delete gpLogManagerImpl;
 		gpLogManagerImpl = nullptr;
+		ssOut << "INFO:  LogManager deleted" << std::endl;
 	}
-	APE_LOG_INFO("LogManager deleted");
+
+	ssOut << "INFO:  All systems stopped and destroyed";
+	std::cout << ssOut.str() << std::endl;
 }
