@@ -26,8 +26,9 @@ SOFTWARE.*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <thread>
+#include <atomic>
 
-bool shouldStop = false;
+std::atomic<bool> shouldStop = false;
 
 void stopHandlerBlocking(int s)
 {
