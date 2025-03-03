@@ -125,6 +125,12 @@ void ape::PluginManagerImpl::StopPlugins()
 	// std::lock_guard<std::mutex> guard(mThreadVectorMutex);
 	for (int i = 0; i < mPluginVector.size(); i++)
 	{
+		if (i >= mThreadVector.size())
+		{
+			APE_LOG_WARNING("No corresponding thread found for plugin index " << i << ", skipping.");
+			continue;
+		}
+
 		APE_LOG_DEBUG("before plugin stop");
 		mPluginVector.at(i)->Stop();
 		APE_LOG_DEBUG("after plugin stop");
@@ -135,12 +141,23 @@ void ape::PluginManagerImpl::StopPlugins()
 			APE_LOG_DEBUG("plugin is joinable, calling join()");
 			mThreadVector.at(i).join();
 		}
-		else
+		else if (mThreadVector.at(i).native_handle() != nullptr)  
 		{
 			APE_LOG_DEBUG("plugin is not joinable, calling detach()");
 			mThreadVector.at(i).detach();
 		}
+		else
+		{
+			APE_LOG_WARNING("plugin has no valid thread, skipping detach()");
+		}
 	}
+
+	// delete all plugin instances 
+	for (auto plugin : mPluginVector)
+	{
+		delete plugin;
+	}
+	mPluginVector.clear();
 
 	// TODO: wait here untiil each plugin / thread has stopped
 	APE_LOG_DEBUG("each plugin has stopped");

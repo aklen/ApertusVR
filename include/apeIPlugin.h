@@ -32,6 +32,8 @@ namespace ape
 	class IPlugin
 	{
 	public:
+		virtual ~IPlugin() = default; 
+
         std::function<void()> mMainThreadFunction;
         
 		virtual void Init() = 0;
