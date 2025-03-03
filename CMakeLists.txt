@@ -102,8 +102,12 @@ elseif(ANDORID)
     add_subdirectory(plugins)
     add_subdirectory(macros)
 elseif(APPLE OR LINUX)
+    #add_subdirectory(plugins/render/filamentRenderCPP)  # test
+    # add_subdirectory(plugins/render/ogreRender)  # test
     add_subdirectory(plugins/scene/helloWorldScene)
-    add_subdirectory(macros/sceneMaker)
+    # add_subdirectory(macros/sceneMaker)
+    # add_subdirectory(macros/userInput) # test - apeFilamentRenderCppPlugin does not find it
+    # add_subdirectory(plugins/render/sdlWindow)
     add_subdirectory(samples/helloWorld)
     add_subdirectory(samples/launcher)
 endif()
