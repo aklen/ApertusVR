@@ -72,13 +72,26 @@ if(WIN32)
 		message (STATUS "Filament is not installed" )
 	endif ()
 elseif(APPLE)
-	if(EXISTS ${FILAMENT_PREBUILD_DIR}/filament/lib/x86_64/libfilament.a)
-		set(FILAMENT_READY TRUE)
-		message (STATUS "Filament is installed" )
-	else ()
-		set(FILAMENT_READY FALSE)
+
+	set(FILAMENT_READY FALSE)
+
+	if (CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64")
+		if(EXISTS ${FILAMENT_PREBUILD_DIR}/filament/lib/arm64/libfilament.a)
+			set(FILAMENT_READY TRUE)
+			message (STATUS "Filament is installed" )
+		endif()
+	elseif (CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
+		if(EXISTS ${FILAMENT_PREBUILD_DIR}/filament/lib/x86_64/libfilament.a)
+			set(FILAMENT_READY TRUE)
+			message (STATUS "Filament is installed" )
+		endif()
+	else()
+		message(STATUS "Unknown architecture: ${CMAKE_SYSTEM_PROCESSOR}")
+	endif()
+
+	if (NOT FILAMENT_READY)
 		message (STATUS "Filament is not installed" )
-	endif ()
+	endif()
 endif()
 if (NOT FILAMENT_READY)
 	if(NOT EXISTS "${FILAMENT_PREBUILD_ZIP}")
@@ -178,28 +191,34 @@ if (WIN32)
 
 elseif(APPLE)
     set(LIBS backend bluegl bluevk camutils dracodec filabridge filaflat filamat filament filameshio  geometry  gltfio gltfio_core ibl image matdbg meshoptimizer shaders smol-v utils viewer )
-	set_property(TARGET MY_FILAMENT PROPERTY IMPORTED_LOCATION_DEBUG ${FILAMENT_PREBUILD_DIR}/filament/lib/x86_64/libfilament.a)
-	set_property(TARGET MY_FILAMENT PROPERTY IMPORTED_LOCATION_RELEASE ${FILAMENT_PREBUILD_DIR}/filament/lib/x86_64/libfilament.a)
+	if (CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64")
+		set_property(TARGET MY_FILAMENT PROPERTY IMPORTED_LOCATION_DEBUG ${FILAMENT_PREBUILD_DIR}/filament/lib/arm64/libfilament.a)
+		set_property(TARGET MY_FILAMENT PROPERTY IMPORTED_LOCATION_RELEASE ${FILAMENT_PREBUILD_DIR}/filament/lib/arm64/libfilament.a)
+	elseif (CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
+		set_property(TARGET MY_FILAMENT PROPERTY IMPORTED_LOCATION_DEBUG ${FILAMENT_PREBUILD_DIR}/filament/lib/x86_64/libfilament.a)
+		set_property(TARGET MY_FILAMENT PROPERTY IMPORTED_LOCATION_RELEASE ${FILAMENT_PREBUILD_DIR}/filament/lib/x86_64/libfilament.a)
+	else()
+		message(STATUS "Unknown architecture: ${CMAKE_SYSTEM_PROCESSOR}")
+	endif()
 endif ()
 
 if(WIN32)
 	set (HEADERS
-        		apeFilamentRenderCppPluginConfigs.h
-        		apeFilamentRenderCppPlugin.h
+		apeFilamentRenderCppPluginConfigs.h
+		apeFilamentRenderCppPlugin.h
 		)
 	set (SOURCES
 		apeFilamentRenderCppPlugin.cpp
 		)
-    	include_directories(
-        		${FILAMENT_PREBUILD_DIR}/include
-        		${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/rapidjson/include
-        )
+	include_directories(
+		${FILAMENT_PREBUILD_DIR}/include
+		${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/rapidjson/include
+		)
 elseif(APPLE)
-
 	set (HEADERS
-        		apeFilamentRenderCppPluginConfigs.h
-        		apeFilamentRenderCppPlugin.h
-                NativeWindowHelper.h
+		apeFilamentRenderCppPluginConfigs.h
+		apeFilamentRenderCppPlugin.h
+		NativeWindowHelper.h
 		)
 	set (SOURCES
 		apeFilamentRenderCppPlugin.cpp
@@ -213,22 +232,23 @@ endif()
 add_library (apeFilamentRenderCppPlugin SHARED ${SOURCES} ${HEADERS})
 
 if(WIN32)
-	target_link_libraries (apeFilamentRenderCppPlugin apePluginManager apeSceneManager apeEventManager apeCoreConfig apeUserInputMacro ${OPENGL_LIBRARIES} 
-	MY_FILAMENT MY_FILAMENT_UTILS MY_FILAMENT_GLTFIO MY_FILAMENT_GLTFIO_CORE MY_FILAMENT_DRACODEC MY_FILAMENT_BACKEND MY_FILAMENT_SHADERS MY_FILAMENT_MATH MY_FILAMENT_GEOMETRY MY_FILAMENT_VIEWER
-MY_FILAMENT_IBL MY_FILAMENT_FLAT MY_FILAMENT_BRIDGE MY_FILAMENT_CAMUTILS MY_FILAMENT_BLUEGL MY_FILAMENT_BLUEVK MY_FILAMENT_IMAGE MY_FILAMENT_SMOL-V MY_FILAMENT_MESHOPT MY_FILAMENT_MATDBG
-Shlwapi.lib)
-
+	target_link_libraries (apeFilamentRenderCppPlugin apePluginManager apeSceneManager apeEventManager apeCoreConfig apeUserInputMacro ${OPENGL_LIBRARIES} MY_FILAMENT MY_FILAMENT_UTILS MY_FILAMENT_GLTFIO MY_FILAMENT_GLTFIO_CORE MY_FILAMENT_DRACODEC MY_FILAMENT_BACKEND MY_FILAMENT_SHADERS MY_FILAMENT_MATH MY_FILAMENT_GEOMETRY MY_FILAMENT_VIEWER MY_FILAMENT_IBL MY_FILAMENT_FLAT MY_FILAMENT_BRIDGE MY_FILAMENT_CAMUTILS MY_FILAMENT_BLUEGL MY_FILAMENT_BLUEVK MY_FILAMENT_IMAGE MY_FILAMENT_SMOL-V MY_FILAMENT_MESHOPT MY_FILAMENT_MATDBG Shlwapi.lib)
 elseif(APPLE)
 	foreach(lib ${LIBS})
-        		add_library(${lib} STATIC IMPORTED)
-        		set_target_properties(${lib} PROPERTIES IMPORTED_LOCATION ${FILAMENT_PREBUILD_DIR}/filament/lib/x86_64/lib${lib}.a)
-		target_link_libraries (apeFilamentRenderCppPlugin ${lib})
+		if (CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64")
+			add_library(${lib} STATIC IMPORTED)
+			set_target_properties(${lib} PROPERTIES IMPORTED_LOCATION ${FILAMENT_PREBUILD_DIR}/filament/lib/arm64/lib${lib}.a)
+			target_link_libraries (apeFilamentRenderCppPlugin ${lib})
+		elseif (CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
+			add_library(${lib} STATIC IMPORTED)
+			set_target_properties(${lib} PROPERTIES IMPORTED_LOCATION ${FILAMENT_PREBUILD_DIR}/filament/lib/x86_64/lib${lib}.a)
+			target_link_libraries (apeFilamentRenderCppPlugin ${lib})
+		else()
+			message(STATUS "Unknown architecture: ${CMAKE_SYSTEM_PROCESSOR}")
+		endif()
 	endforeach()
 	target_link_libraries (apeFilamentRenderCppPlugin apePluginManager apeSceneManager apeEventManager apeCoreConfig apeUserInputMacro ${OPENGL_LIBRARIES} MY_FILAMENT "-framework Cocoa -framework Metal -framework CoreVideo")
 endif()
 
 set_property (TARGET apeFilamentRenderCppPlugin PROPERTY COMPILE_DEFINITIONS APE_SOURCE_DIR="${APE_SOURCE_DIR}")
-
 set_property (TARGET apeFilamentRenderCppPlugin PROPERTY FOLDER "Plugins/Render")
-
-
