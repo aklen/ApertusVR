@@ -23,7 +23,6 @@
 set (CONFIGS
 	apeOgreRenderPlugin.json
 	apeViewPointManagerPlugin.json
-	apeCore.json
 	)
 
 add_custom_target(

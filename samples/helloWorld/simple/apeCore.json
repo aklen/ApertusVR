@@ -1,0 +1,25 @@
+{
+  "plugins": [
+    "apeHelloWorldScenePlugin"
+  ],
+  "network": {
+    "user": "",
+    "participant": "none",
+    "internet": {
+      "natPunchThrough": {
+        "ip": "",
+        "port": ""
+      },
+      "lobby": {
+        "ip": "",
+        "port": "",
+        "room": ""
+      }
+    },
+    "lan": {
+      "ip": "",
+      "port": ""
+    },
+    "selected": "none"
+  }
+}
