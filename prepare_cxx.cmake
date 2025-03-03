@@ -10,8 +10,18 @@ if (APPLE)
 	check_c_compiler_flag("-arch arm64" arm64Supported)
 	# message("arm64Supported=${arm64Supported}")
 	if(arm64Supported EQUAL 1)
-		message("Apple M1")
+		message(STATUS "Apple M1")
 		set(APPLE_M1 TRUE)
+
+		execute_process(
+			COMMAND xcrun --sdk macosx --show-sdk-path
+			OUTPUT_VARIABLE SDK_PATH
+			OUTPUT_STRIP_TRAILING_WHITESPACE
+		)
+
+		if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+			set(CMAKE_OSX_SYSROOT ${SDK_PATH} CACHE STRING "macOS SDK Path")
+		endif ()
 	endif ()
 endif ()
 
