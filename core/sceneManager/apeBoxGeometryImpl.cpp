@@ -89,7 +89,8 @@ std::string ape::BoxGeometryImpl::getOwner()
 void ape::BoxGeometryImpl::WriteAllocationID(RakNet::Connection_RM3 *destinationConnection, RakNet::BitStream *allocationIdBitstream) const
 {
 	allocationIdBitstream->Write(mObjectType);
-	allocationIdBitstream->Write(RakNet::RakString(mName.c_str())); allocationIdBitstream->Write(RakNet::RakString(mOwnerID.c_str()));
+	allocationIdBitstream->Write(RakNet::RakString(mName.c_str()));
+	allocationIdBitstream->Write(RakNet::RakString(mOwnerID.c_str()));
 }
 
 RakNet::RM3SerializationResult ape::BoxGeometryImpl::Serialize(RakNet::SerializeParameters *serializeParameters)
