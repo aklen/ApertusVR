@@ -105,6 +105,7 @@ elseif(APPLE OR LINUX)
     #add_subdirectory(plugins/render/filamentRenderCPP)  # test
     # add_subdirectory(plugins/render/ogreRender)  # test
     add_subdirectory(plugins/scene/helloWorldScene)
+    add_subdirectory(plugins/gstreamer)
     # add_subdirectory(macros/sceneMaker)
     # add_subdirectory(macros/userInput) # test - apeFilamentRenderCppPlugin does not find it
     # add_subdirectory(plugins/render/sdlWindow)

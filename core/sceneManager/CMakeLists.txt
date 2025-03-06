@@ -27,6 +27,7 @@ include("network/prepare_raknet.cmake")
 include("network/prepare_zip.cmake")
 
 set(HEADERS
+	apeAudioImpl.h
 	apeTextGeometryImpl.h
 	apeLightImpl.h
 	apeBrowserImpl.h
@@ -65,6 +66,7 @@ set(HEADERS
 	)
 
 set(SOURCES
+	apeAudioImpl.cpp
 	apeTextGeometryImpl.cpp
 	apeLightImpl.cpp
 	apeBrowserImpl.cpp

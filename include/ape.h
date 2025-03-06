@@ -30,6 +30,12 @@ SOFTWARE.*/
 
 namespace ape
 {	
+	class IAudio;
+
+	typedef std::shared_ptr<IAudio> AudioSharedPtr;
+
+	typedef std::weak_ptr<IAudio> AudioWeakPtr;
+
 	class INode;
 
 	typedef std::shared_ptr<INode> NodeSharedPtr;

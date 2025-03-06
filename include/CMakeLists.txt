@@ -32,6 +32,7 @@ set (HEADERS
 		apeFileSystem.h
 		apeGeometry.h
 		apeHeadTrackingConfigs.h
+		apeIAudio.h
 		apeIBoxGeometry.h
 		apeIBrowser.h
 		apeICamera.h
