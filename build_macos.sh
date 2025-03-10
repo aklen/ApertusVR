@@ -11,7 +11,7 @@ APE_BUILD_PATH="${1:-${APE_BUILD_PATH:-$APE_SOURCE_PATH/build}}"  # Use first ar
 # Detect macOS SDK path
 SDK_PATH=$(xcrun --sdk macosx --show-sdk-path)
 
-# Set compiler flags
+# Set flags
 CXX_FLAGS="-isysroot $SDK_PATH -stdlib=libc++"
 BUILD_TYPE="Release"
 
@@ -22,7 +22,7 @@ if command -v brew &> /dev/null && brew list llvm &> /dev/null; then
     export CXX=/opt/homebrew/opt/llvm/bin/clang++
 fi
 
-# Custom env setup (ha szükséges)
+# Custom env setup
 export CMAKE_SYSTEM_PREFIX_PATH="$SDK_PATH/usr"
 export PKG_CONFIG_PATH="/opt/homebrew/lib/pkgconfig:$PKG_CONFIG_PATH"
 
