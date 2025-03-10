@@ -6,6 +6,9 @@
 #include "apeEventManagerImpl.h"
 #include "apeReplica.h"
 #include <mutex>
+#include <deque>
+#include <vector>
+#include <fstream>
 
 namespace ape
 {
