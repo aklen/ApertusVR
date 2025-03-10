@@ -228,17 +228,6 @@ void ape::apeGStreamerPlugin::PlayAudio(const std::string& uri) {
     APE_LOG_DEBUG("[GStreamerPlugin]::Play() Original URI: " << uri);
     APE_LOG_DEBUG("[GStreamerPlugin]::Play() Cleaned URI: " << cleanedUri);
 
-    // if (!pipeline || !appsrc) {
-    //     APE_LOG_DEBUG("[GStreamerPlugin]::Play() Pipeline or appsrc not initialized!");
-    //     return;
-    // }
-
-    // GstElement* uridecodebin = gst_element_factory_make("uridecodebin", "uri-decoder");
-    // g_object_set(uridecodebin, "uri", cleanedUri.c_str(), nullptr);
-
-    // gst_bin_add(GST_BIN(pipeline), uridecodebin);
-    // gst_element_link(uridecodebin, appsrc);
-
     pipeline_uri = gst_element_factory_make("playbin", "pipeline");
     g_object_set(pipeline_uri, "uri", uri.c_str(), nullptr);
 
