@@ -1,0 +1,10 @@
+{
+    "audio": {
+        "source": "binary",
+        "filePath": "/Users/aklen/Music/Ableton/Projects/647 Project/export/647.mp3",
+        "uris": [
+            "http://example.com/1",
+            "http://example.com/2"
+        ]
+    }
+}

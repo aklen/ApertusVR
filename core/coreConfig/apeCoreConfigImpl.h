@@ -69,6 +69,7 @@ namespace ape
 		std::string getNetworkGUID() override;
 
 		std::string getConfigFolderPath() override;
+
 	};
 }
 

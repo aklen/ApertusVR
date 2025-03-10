@@ -24,6 +24,7 @@
 set (HEADERS
 		ape.h
 		apeColor.h
+		apeConfigNode.h
 		apeDegree.h
 		apeDoubleQueue.h
 		apeEntity.h

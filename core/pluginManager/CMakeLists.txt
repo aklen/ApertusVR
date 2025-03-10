@@ -38,7 +38,7 @@ set (SOURCES
 	
 include_directories(
 	${PROJECT_SOURCE_DIR}/core/logManager
-	${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/rapidjson/include
+	${APE_THIRDPARTY_DIR}/rapidjson/include/
 	)
 
 # Add the dynamic library target to the project

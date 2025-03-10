@@ -111,7 +111,7 @@ include_directories(
 	${PROJECT_SOURCE_DIR}/core/logManager
 	${RAKNET_INCLUDE_DIR}
 	${CURL_INCLUDE_DIRS}
-	${CMAKE_CURRENT_SOURCE_DIR}/network/3rdParty/rapidjson/include
+	${APE_THIRDPARTY_DIR}/rapidjson/include/
 	${MY_ZIP_INCLUDE_DIR}
 	)
 

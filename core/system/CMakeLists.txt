@@ -30,8 +30,10 @@ include_directories(
 	${PROJECT_SOURCE_DIR}/core/eventManager
 	${PROJECT_SOURCE_DIR}/core/logManager
 	${PROJECT_SOURCE_DIR}/core/coreConfig
+	${PROJECT_SOURCE_DIR}/core/configManager
 	${PROJECT_SOURCE_DIR}/core/mainWindow
 	${PROJECT_SOURCE_DIR}/core/sceneManager
+	${APE_THIRDPARTY_DIR}/rapidjson/include/
 	${RAKNET_INCLUDE_DIR}	
 	)
 
@@ -44,6 +46,7 @@ if(NOT ANDROID)
 			apeLogManager
 			apeSceneManager
 			apeCoreConfig
+			apeConfigManager
 			)
 else()
 	set(APE_SYSTEM_DEPENDENCIES
@@ -52,6 +55,7 @@ else()
 			apeLogManager
 			apeSceneManager
 			apeCoreConfig
+			apeConfigManager
 			apeJNIPlugin
 			apeAndroidSampleScenePlugin
 			apeSampleScenePlugin

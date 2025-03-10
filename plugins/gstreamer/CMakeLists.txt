@@ -21,16 +21,16 @@ endif()
 # Add all header and cpp files in the directory to the project
 set (HEADERS
 	apeGStreamerPlugin.h
-	)
+)
 
 set (SOURCES 
     apeGStreamerPlugin.cpp
-	)
+)
 
 include_directories(
     ${APE_SOURCE_DIR}/include
     ${APE_SOURCE_DIR}/core/eventManager
-    )
+)
 
 add_library (apeGStreamerPlugin SHARED ${SOURCES} ${HEADERS})
 
@@ -39,6 +39,6 @@ target_include_directories(apeGStreamerPlugin PUBLIC
 )
 
 # Link with dependency libraries
-target_link_libraries (apeGStreamerPlugin apePluginManager apeEventManager apeLogManager ${GSTREAMER_LIBRARIES} CURL::libcurl)
+target_link_libraries (apeGStreamerPlugin apeLogManager apeCoreConfig apeConfigManager apeEventManager apePluginManager ${GSTREAMER_LIBRARIES} CURL::libcurl)
 set_property (TARGET apeGStreamerPlugin PROPERTY COMPILE_DEFINITIONS APE_SOURCE_DIR="${APE_SOURCE_DIR}")
 set_property (TARGET apeGStreamerPlugin PROPERTY FOLDER "Plugins/GStreamer")

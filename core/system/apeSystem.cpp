@@ -30,12 +30,14 @@ SOFTWARE.*/
 #include "apePluginManagerImpl.h"
 #include "apeSceneManagerImpl.h"
 #include "apeCoreConfigImpl.h"
+#include "apeConfigManagerImpl.h"
 
 ape::PluginManagerImpl* gpPluginManagerImpl;
 ape::EventManagerImpl* gpEventManagerImpl;
 ape::LogManagerImpl* gpLogManagerImpl;
 ape::SceneManagerImpl* gpSceneManagerImpl;
 ape::CoreConfigImpl* gpCoreConfigImpl;
+ape::ConfigManagerImpl* gpConfigManagerImpl;
 
 void ape::System::Start(const char* configFolderPath, bool isBlocking, std::function<void()> userThreadFunction, int step_interval)
 {
@@ -44,6 +46,7 @@ void ape::System::Start(const char* configFolderPath, bool isBlocking, std::func
 	APE_LOG("Build Target Platform: " << APE_PLATFORM_STRING);
 	APE_LOG("-----------------------------------------------------------------------------");
 	gpCoreConfigImpl = new CoreConfigImpl(std::string(configFolderPath));
+	gpConfigManagerImpl = new ConfigManagerImpl();
 	gpEventManagerImpl = new EventManagerImpl();
 	gpSceneManagerImpl = new SceneManagerImpl();
 	gpPluginManagerImpl = new PluginManagerImpl();
@@ -101,6 +104,14 @@ void ape::System::Stop()
 		delete gpCoreConfigImpl;
 		gpCoreConfigImpl = nullptr;
 		APE_LOG_INFO("CoreConfig deleted");
+	}
+
+	if (gpConfigManagerImpl)
+	{
+		APE_LOG_TRACE("ConfigManager deleting...");
+		delete gpConfigManagerImpl;
+		gpConfigManagerImpl = nullptr;
+		APE_LOG_INFO("ConfigManager deleted");
 	}
 
 	if (gpLogManagerImpl)

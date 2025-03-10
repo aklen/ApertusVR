@@ -5,7 +5,7 @@
 # 3rdParty/raknet/Source/CCRakNetSlidingWindow.cpp was changed
 # raknet patch log end
 
-set (RAKNET_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/network/3rdParty/raknet)
+set (RAKNET_SRC_DIR ${APE_THIRDPARTY_DIR}/raknet)
 
 if(NOT ANDROID)
 	if (NOT EXISTS ${CMAKE_BINARY_DIR}/raknet/build)

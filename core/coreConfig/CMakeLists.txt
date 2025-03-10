@@ -29,9 +29,8 @@ set (SOURCES
 	)
 	
 include_directories(
-		${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/rapidjson/include
-	)
-
+	${APE_THIRDPARTY_DIR}/rapidjson/include/
+)
 
 add_library (apeCoreConfig SHARED ${SOURCES} ${HEADERS})
 

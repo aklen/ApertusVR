@@ -2,7 +2,7 @@
 if (WIN32)
 	set (CURL_READY FALSE)
 
-	set(CURL_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/network/3rdParty/curl)
+	set(CURL_SOURCE_DIR ${APE_THIRDPARTY_DIR}/curl)
 	if (NOT EXISTS ${CMAKE_BINARY_DIR}/curl/build)
 		file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/curl/build)
 	endif()

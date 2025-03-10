@@ -14,6 +14,7 @@
 #include "apeEventManagerImpl.h"
 #include "apeISceneManager.h"
 #include "apeILogManager.h"
+#include "apeIConfigManager.h"
 #include "apeICoreConfig.h"
 #include "apeIAudio.h"
 #include <gst/gst.h>
@@ -60,11 +61,13 @@ namespace ape
 		void StopAppSrc(GstElement* appsrc);
 
 	private:
+		ape::ICoreConfig* mpCoreConfig;
+		ape::IConfigManager* mpConfigManager;
 		ape::IEventManager* mpEventManager;
 		ape::EventManagerImpl* mpEventManagerImpl;
 		ape::ISceneManager* mpSceneManager;
-		ape::ICoreConfig* mpCoreConfig;
 		void eventCallBack(const ape::Event& event);
+		ConfigNode mConfig;
 
 		GstElement* pipeline_uri;  // URI alapú lejátszáshoz
         GstElement* pipeline_chunk;  // Chunk alapú lejátszáshoz

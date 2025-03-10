@@ -1,4 +1,4 @@
-set (ZIP_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/network/3rdParty/zip)
+set (ZIP_SRC_DIR ${APE_THIRDPARTY_DIR}/zip)
 
 if(NOT ANDROID)
 	if (NOT EXISTS ${CMAKE_BINARY_DIR}/zip/build)

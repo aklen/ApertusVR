@@ -46,7 +46,8 @@ ape::apeGStreamerPlugin::apeGStreamerPlugin()
  : pipeline_uri(nullptr), pipeline_chunk(nullptr), running(false)
 {
 	APE_LOG_FUNC_ENTER();
-	mpCoreConfig = ape::ICoreConfig::getSingletonPtr();
+    mpCoreConfig = ape::ICoreConfig::getSingletonPtr();
+    mpConfigManager = ape::IConfigManager::getSingletonPtr();
 	mpEventManager = ape::IEventManager::getSingletonPtr();
     mpEventManagerImpl = ((ape::EventManagerImpl*)ape::IEventManager::getSingletonPtr());
     mpEventManager->connectEvent(ape::Event::Group::AUDIO, std::bind(&apeGStreamerPlugin::eventCallBack, this, std::placeholders::_1));
@@ -159,15 +160,25 @@ void ape::apeGStreamerPlugin::Init()
 {
 	APE_LOG_FUNC_ENTER();
 
-    // create an audio entity
-    if (auto audio = std::static_pointer_cast<ape::IAudio>(mpSceneManager->createEntity("audio_test", ape::Entity::AUDIO, true, mpCoreConfig->getNetworkGUID()).lock())) {
-        int channels = audio->getChannels();
-        APE_LOG_DEBUG("[DataStreamerPlugin]::Init() Audio channels: " << channels);
+    // plugin config
+    if (mpConfigManager->loadJson(mpCoreConfig->getConfigFolderPath() + "/" + THIS_PLUGINNAME + ".json", mConfig)) {
+        // mConfig.print();
 
-        // load the first chunk of the audio file
-        audio->setFilePath("/Users/aklen/Music/Ableton/Projects/647 Project/export/647.mp3");
-        bool firstLoaded = audio->loadNextAudioChunk(APE_AUDIO_CHUNK_SIZE_1MB);
-        APE_LOG_DEBUG("[DataStreamerPlugin]::Init() First chunk loaded: " << firstLoaded);
+        std::string audioFilePath = mConfig["audio"].getString("filePath");
+        APE_LOG_DEBUG("[GStreamerPlugin]::Constructor() File path: " << audioFilePath);
+        std::string source = mConfig["audio"].getString("source");
+        APE_LOG_DEBUG("[GStreamerPlugin]::Constructor() Source: " << source);
+
+        // create an audio entity
+        if (auto audio = std::static_pointer_cast<ape::IAudio>(mpSceneManager->createEntity("audio_test", ape::Entity::AUDIO, true, mpCoreConfig->getNetworkGUID()).lock())) {
+            int channels = audio->getChannels();
+            APE_LOG_DEBUG("[DataStreamerPlugin]::Init() Audio channels: " << channels);
+
+            // load the first chunk of the audio file
+            audio->setFilePath(audioFilePath);
+            bool firstLoaded = audio->loadNextAudioChunk(APE_AUDIO_CHUNK_SIZE_1MB);
+            APE_LOG_DEBUG("[DataStreamerPlugin]::Init() First chunk loaded: " << firstLoaded);
+        }
     }
 
 	APE_LOG_FUNC_LEAVE();
