@@ -12,9 +12,13 @@
 #include "apePluginAPI.h"
 #include "apeIEventManager.h"
 #include "apeEventManagerImpl.h"
+#include "apeISceneManager.h"
 #include "apeILogManager.h"
 #include "apeICoreConfig.h"
+#include "apeIAudio.h"
 #include <gst/gst.h>
+#include <gst/audio/audio.h>
+#include <gobject/gsignal.h>
 
 #define THIS_PLUGINNAME "apeGStreamerPlugin"
 
@@ -33,18 +37,39 @@ namespace ape
 		void Suspend() override;
 		void Restart() override;
 
-		void PlayAudio(const std::string& uri);  // Play a file or URL
+		// URI-based playback (playbin)
+		void PlayAudio(const std::string& uri);
+
+		// Chunk-based playback (appsrc → decodebin → audioconvert → audioresample → autoaudiosink)
+		void PlayAudioChunk(const std::vector<uint8_t>& audioData);
+
 		void StopAudio(bool force = false);  // Stop the current playback
 		void PauseAudio();  // Pause the current playback
 		void ResumeAudio();  // Resume the current playback
 
+		GstElement* getAppSrc();
+		ape::ISceneManager* getSceneManager();
+		GstElement* GetPipelineUri();
+		GstElement* GetPipelineChunk();
+
+		void StopPipeline(GstElement* pipeline);
+		void RemovePiplineBusWatch(GstElement* pipeline);
+		void ShutdownPipeline(GstElement* pipeline);
+		void UnrefPipeline(GstElement*& pipeline);
+		void DestroyPipeline(GstElement* pipeline);
+		void StopAppSrc(GstElement* appsrc);
+
 	private:
 		ape::IEventManager* mpEventManager;
 		ape::EventManagerImpl* mpEventManagerImpl;
+		ape::ISceneManager* mpSceneManager;
 		ape::ICoreConfig* mpCoreConfig;
 		void eventCallBack(const ape::Event& event);
 
-		GstElement* pipeline;
+		GstElement* pipeline_uri;  // URI alapú lejátszáshoz
+        GstElement* pipeline_chunk;  // Chunk alapú lejátszáshoz
+		GstElement* appsrc;
+		
 		std::atomic<bool> running;
 		std::thread gstThread;
 

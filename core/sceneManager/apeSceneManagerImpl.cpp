@@ -21,6 +21,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.*/
 
 #include "apeSceneManagerImpl.h"
+#include "apeAudioImpl.h"
 #include "apeNodeImpl.h"
 #include "apeLightImpl.h"
 #include "apeTextGeometryImpl.h"
@@ -139,6 +140,19 @@ ape::EntityWeakPtr ape::SceneManagerImpl::createEntity(std::string name, ape::En
 	APE_LOG_FUNC_ENTER();
 	switch (type) 
 	{
+		case ape::Entity::AUDIO:
+		{
+			APE_LOG_TRACE("type: AUDIO");
+			auto entity = std::make_shared<ape::AudioImpl>(name, replicate, ownerID, ((ape::SceneNetworkImpl*)mpSceneNetwork)->isReplicaHost());
+			mEntities.insert(std::make_pair(name, entity));
+			((ape::EventManagerImpl*)mpEventManager)->fireEvent(ape::Event(name, ape::Event::Type::AUDIO_CREATE));
+			if (replicate)
+			{
+				if (auto replicaManager = ((ape::SceneNetworkImpl*)mpSceneNetwork)->getReplicaManager().lock())
+					replicaManager->Reference(entity.get());
+			}
+			return entity;
+		}
 		case ape::Entity::LIGHT:
 		{
 			APE_LOG_TRACE("type: LIGHT");

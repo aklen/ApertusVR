@@ -7,8 +7,10 @@ ape::AudioImpl::AudioImpl(std::string name, bool replicate, std::string ownerID,
     mpSceneManager = ape::ISceneManager::getSingletonPtr();
     mAudioData = std::vector<uint8_t>();
     mSampleRate = 44100; // Default sample rate
-    mChannels = 2;       // Default stereo
-    mMaxBufferSize = 4 * 1024 * 1024; // 4 MB
+    mChannels = 2; // Default stereo
+    mMaxBufferSize = 4 * 1024 * 1024; // Default is 4 MB
+    mFilePosition = 0;
+    mDataSize = 0;
 }
 
 ape::AudioImpl::~AudioImpl()
@@ -31,7 +33,8 @@ void ape::AudioImpl::setAudioData(const std::vector<uint8_t>& audioData)
 void ape::AudioImpl::appendAudioData(const std::vector<uint8_t>& newAudioData)
 {
     std::lock_guard<std::mutex> lock(mMutex);
-    
+    APE_LOG_DEBUG("[AudioImpl]::appendAudioData() Appending " << newAudioData.size() << " bytes of audio data.");
+
     // append new audio data to the end of the buffer
     mAudioData.insert(mAudioData.end(), newAudioData.begin(), newAudioData.end());
 
@@ -43,6 +46,92 @@ void ape::AudioImpl::appendAudioData(const std::vector<uint8_t>& newAudioData)
     }
 
     mpEventManagerImpl->fireEvent(ape::Event(mName, ape::Event::Type::AUDIO_DATA));
+}
+
+void ape::AudioImpl::setFilePath(const std::string& filePath)
+{
+    std::lock_guard<std::mutex> lock(mMutex);
+    APE_LOG_DEBUG("[AudioImpl]::setFilePath() Setting file path: " << filePath);
+    if (mAudioFile.is_open())
+    {
+        APE_LOG_DEBUG("[AudioImpl]::setFilePath() Closing previous file.");
+        mAudioFile.close();
+    }
+
+    mFilePath = filePath;
+    mAudioFile.open(filePath, std::ios::binary);
+    if (!mAudioFile)
+    {
+        APE_LOG_ERROR("[AudioImpl]::setFilePath() Error: Failed to open file: " << filePath);
+        return;
+    }
+    APE_LOG_DEBUG("[AudioImpl]::setFilePath() File opened successfully.");
+
+    mFilePosition = 0;
+    mAudioFile.seekg(0, std::ios::end);
+    mDataSize = mAudioFile.tellg();
+    mAudioFile.seekg(0, std::ios::beg);
+
+    APE_LOG_DEBUG("[AudioImpl]::setFilePath() File size: " << mDataSize);
+}
+
+bool ape::AudioImpl::loadNextAudioChunk(size_t chunkSize)
+{
+    std::vector<uint8_t> buffer(chunkSize);
+
+    {
+        std::lock_guard<std::mutex> lock(mMutex);
+        APE_LOG_DEBUG("[AudioImpl]::loadNextAudioChunk() Loading next audio chunk...");
+
+        if (!mAudioFile.is_open() || mFilePosition >= mDataSize)
+        {
+            APE_LOG_DEBUG("[AudioImpl]::loadNextAudioChunk() End of file reached.");
+            return false;
+        }
+        APE_LOG_DEBUG("[AudioImpl]::loadNextAudioChunk() File position: " << mFilePosition);
+
+        mAudioFile.seekg(mFilePosition, std::ios::beg);
+        mAudioFile.read(reinterpret_cast<char*>(buffer.data()), chunkSize);
+        size_t bytesRead = mAudioFile.gcount();
+        APE_LOG_DEBUG("[AudioImpl]::loadNextAudioChunk() Read " << bytesRead << " bytes of audio data.");
+        buffer.resize(bytesRead);
+
+        mFilePosition += bytesRead;
+    } // release lock
+
+    appendAudioData(buffer);
+    mLastChunkData = buffer;
+    APE_LOG_DEBUG("[AudioImpl]::loadNextAudioChunk() Appended " << buffer.size() << " bytes of audio data.");
+    mpEventManagerImpl->fireEvent(ape::Event(mName, ape::Event::Type::AUDIO_CHUNK_LOAD));
+    return buffer.size() > 0;
+}
+
+std::vector<uint8_t> ape::AudioImpl::getLastChunkData()
+{
+    std::lock_guard<std::mutex> lock(mMutex);
+    return mLastChunkData;
+}
+
+size_t ape::AudioImpl::getCurrentStreamPosition()
+{
+    return mFilePosition;
+}
+
+void ape::AudioImpl::seekTo(size_t newPosition)
+{
+    std::lock_guard<std::mutex> lock(mMutex);
+
+    if (newPosition >= mDataSize)
+    {
+        APE_LOG_WARNING("[AudioImpl] Warning: Seek position out of range, setting to end of file.");
+        newPosition = mDataSize;
+    }
+
+    mFilePosition = newPosition;
+    mAudioData.clear();
+    loadNextAudioChunk(mMaxBufferSize / 2);
+
+    APE_LOG_DEBUG("[AudioImpl] Seeked to new position: " << newPosition);
 }
 
 int ape::AudioImpl::getSampleRate()
