@@ -48,6 +48,8 @@ namespace ape
 		void PauseAudio();  // Pause the current playback
 		void ResumeAudio();  // Resume the current playback
 
+		std::string GetCurrentAudioEntityId();
+
 		GstElement* getAppSrc();
 		ape::ISceneManager* getSceneManager();
 		GstElement* GetPipelineUri();
@@ -75,6 +77,8 @@ namespace ape
 		
 		std::atomic<bool> running;
 		std::thread gstThread;
+
+		std::string mCurrentAudioEntityId;
 
 		static void OnBusMessage(GstBus* bus, GstMessage* msg, gpointer data);
 		void GStreamerMainLoop();

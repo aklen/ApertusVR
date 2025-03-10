@@ -28,6 +28,8 @@ namespace ape
 
         virtual void setAudioData(const std::vector<uint8_t>& data) = 0;
 
+        virtual std::vector<uint8_t> getAllAudioChunks() = 0;
+
         virtual int getSampleRate() = 0;
 
         virtual void appendAudioData(const std::vector<uint8_t>& newAudioData) = 0;
@@ -35,6 +37,8 @@ namespace ape
         virtual void setFilePath(const std::string& filePath) = 0;
 
         virtual bool loadNextAudioChunk(size_t chunkSize) = 0;
+
+        virtual void removePlayedChunk() = 0;
 
         virtual std::vector<uint8_t> getLastChunkData() = 0;
 

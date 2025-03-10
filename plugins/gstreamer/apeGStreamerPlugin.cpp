@@ -24,6 +24,7 @@ static void on_pad_added(GstElement* src, GstPad* new_pad, gpointer data)
 static void on_need_data(GstElement* src, guint size, gpointer user_data)
 {
     ape::apeGStreamerPlugin* plugin = static_cast<ape::apeGStreamerPlugin*>(user_data);
+    if (!plugin) return;
 
     GstState state;
     gst_element_get_state(plugin->GetPipelineChunk(), &state, nullptr, GST_CLOCK_TIME_NONE);
@@ -32,13 +33,21 @@ static void on_need_data(GstElement* src, guint size, gpointer user_data)
         return;
     }
 
-    APE_LOG_DEBUG("[GStreamerPlugin]::on_need_data() More data needed...");
-    if (auto audio = std::static_pointer_cast<ape::IAudio>(plugin->getSceneManager()->getEntity("audio_test").lock())) {
+    APE_LOG_DEBUG("[GStreamerPlugin]::on_need_data() Check if more data needed...");
+    std::string currentAudioEntityId = plugin->GetCurrentAudioEntityId();
+    if (auto audio = std::static_pointer_cast<ape::IAudio>(plugin->getSceneManager()->getEntity(currentAudioEntityId).lock())) {
         if (audio->loadNextAudioChunk(APE_AUDIO_CHUNK_SIZE_1MB)) {
             APE_LOG_DEBUG("[GStreamerPlugin]::on_need_data() Loaded next chunk.");
         } else {
             APE_LOG_DEBUG("[GStreamerPlugin]::on_need_data() No more chunks, sending EOS.");
-            g_signal_emit_by_name(plugin->getAppSrc(), "end-of-stream", nullptr);
+            // g_signal_emit_by_name(plugin->getAppSrc(), "end-of-stream", nullptr);
+            // GstMessage* eos_msg = gst_message_new_eos(GST_OBJECT(src));
+            // gst_element_post_message(src, eos_msg);
+
+            GstBus* bus = gst_element_get_bus(plugin->GetPipelineChunk());
+            GstMessage* eos_msg = gst_message_new_eos(GST_OBJECT(src));
+            gst_bus_post(bus, eos_msg);
+            gst_object_unref(bus);
         }
     }
 }
@@ -53,6 +62,7 @@ ape::apeGStreamerPlugin::apeGStreamerPlugin()
     mpEventManagerImpl = ((ape::EventManagerImpl*)ape::IEventManager::getSingletonPtr());
     mpEventManager->connectEvent(ape::Event::Group::AUDIO, std::bind(&apeGStreamerPlugin::eventCallBack, this, std::placeholders::_1));
     mpSceneManager = ape::ISceneManager::getSingletonPtr();
+    mCurrentAudioEntityId = "";
 
     // GStreamer initialization
     gst_init(nullptr, nullptr);
@@ -175,7 +185,8 @@ void ape::apeGStreamerPlugin::Init()
         APE_LOG_DEBUG("[GStreamerPlugin]::Constructor() Source: " << source);
 
         // create an audio entity
-        if (auto audio = std::static_pointer_cast<ape::IAudio>(mpSceneManager->createEntity("audio_" + audioFileName, ape::Entity::AUDIO, true, mpCoreConfig->getNetworkGUID()).lock())) {
+        mCurrentAudioEntityId = "audio_" + audioFileName;
+        if (auto audio = std::static_pointer_cast<ape::IAudio>(mpSceneManager->createEntity(mCurrentAudioEntityId, ape::Entity::AUDIO, true, mpCoreConfig->getNetworkGUID()).lock())) {
             int channels = audio->getChannels();
             APE_LOG_DEBUG("[DataStreamerPlugin]::Init() Audio channels: " << channels);
 
@@ -490,4 +501,9 @@ void ape::apeGStreamerPlugin::StopAppSrc(GstElement* appsrc)
     if (ret != GST_FLOW_OK) {
         APE_LOG_WARNING("[GStreamerPlugin]::Stop() CHUNK: Error sending EOS to appsrc!");
     }
+}
+
+std::string ape::apeGStreamerPlugin::GetCurrentAudioEntityId()
+{
+    return mCurrentAudioEntityId;
 }

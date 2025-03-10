@@ -5,10 +5,11 @@ ape::AudioImpl::AudioImpl(std::string name, bool replicate, std::string ownerID,
 {
     mpEventManagerImpl = ((ape::EventManagerImpl*)ape::IEventManager::getSingletonPtr());
     mpSceneManager = ape::ISceneManager::getSingletonPtr();
-    mAudioData = std::vector<uint8_t>();
+    mAudioChunks = std::deque<std::vector<uint8_t>>();
     mSampleRate = 44100; // Default sample rate
     mChannels = 2; // Default stereo
-    mMaxBufferSize = 4 * 1024 * 1024; // Default is 4 MB
+    mChunkSize = 1 * 1024 * 1024;
+    mMaxChunks = 2;
     mFilePosition = 0;
     mDataSize = 0;
 }
@@ -20,32 +21,106 @@ ape::AudioImpl::~AudioImpl()
 std::vector<uint8_t> ape::AudioImpl::getAudioData()
 {
     std::lock_guard<std::mutex> lock(mMutex);
-    return mAudioData;
+    
+    if (!mAudioChunks.empty())
+        return mAudioChunks.back();
+
+    return {};
+}
+
+std::vector<uint8_t> ape::AudioImpl::getAllAudioChunks()
+{
+    std::lock_guard<std::mutex> lock(mMutex);
+
+    // 🔹 Meghatározzuk a teljes méretet
+    size_t totalSize = 0;
+    for (const auto& chunk : mAudioChunks)
+    {
+        totalSize += chunk.size();
+    }
+
+    // 🔹 Létrehozzuk a teljes buffer vektort
+    std::vector<uint8_t> fullAudioData;
+    fullAudioData.reserve(totalSize); // 🔹 Előfoglalás a memóriafragmentáció csökkentésére
+
+    // 🔹 Az összes chunk összefűzése
+    for (const auto& chunk : mAudioChunks)
+    {
+        fullAudioData.insert(fullAudioData.end(), chunk.begin(), chunk.end());
+    }
+
+    return fullAudioData;
 }
 
 void ape::AudioImpl::setAudioData(const std::vector<uint8_t>& audioData)
 {
     std::lock_guard<std::mutex> lock(mMutex);
-    mAudioData = audioData;
+    
+    mAudioChunks.clear();
+    mAudioChunks.push_back(audioData);
+
     mpEventManagerImpl->fireEvent(ape::Event(mName, ape::Event::Type::AUDIO_DATA));
 }
 
 void ape::AudioImpl::appendAudioData(const std::vector<uint8_t>& newAudioData)
 {
     std::lock_guard<std::mutex> lock(mMutex);
-    APE_LOG_DEBUG("[AudioImpl]::appendAudioData() Appending " << newAudioData.size() << " bytes of audio data.");
 
-    // append new audio data to the end of the buffer
-    mAudioData.insert(mAudioData.end(), newAudioData.begin(), newAudioData.end());
-
-    // if buffer size exceeds the maximum allowed size, remove the oldest data
-    if (mAudioData.size() > mMaxBufferSize)
+    // if the queue is full, remove the oldest chunk
+    if (mAudioChunks.size() >= mMaxChunks)
     {
-        size_t excess = mAudioData.size() - mMaxBufferSize;
-        mAudioData.erase(mAudioData.begin(), mAudioData.begin() + excess);
+        mAudioChunks.pop_front();
     }
 
-    mpEventManagerImpl->fireEvent(ape::Event(mName, ape::Event::Type::AUDIO_DATA));
+    mAudioChunks.push_back(newAudioData);
+}
+
+bool ape::AudioImpl::loadNextAudioChunk(size_t chunkSize)
+{
+    std::vector<uint8_t> buffer(chunkSize);
+    size_t bytesRead = 0;
+
+    {
+        std::lock_guard<std::mutex> lock(mMutex);
+        APE_LOG_DEBUG("[AudioImpl]::loadNextAudioChunk() Loading next audio chunk...");
+
+        if (!mAudioFile.is_open() || mFilePosition >= mDataSize)
+        {
+            APE_LOG_DEBUG("[AudioImpl]::loadNextAudioChunk() End of file reached.");
+            return false;
+        }
+
+        mAudioFile.seekg(mFilePosition, std::ios::beg);
+        mAudioFile.read(reinterpret_cast<char*>(buffer.data()), chunkSize);
+        bytesRead = mAudioFile.gcount();
+        APE_LOG_DEBUG("[AudioImpl]::loadNextAudioChunk() Read " << bytesRead << " bytes of audio data.");
+        buffer.resize(bytesRead);
+        mFilePosition += bytesRead;
+
+        // if the queue is full, remove the oldest chunk
+        if (mAudioChunks.size() >= mMaxChunks)
+        {
+            mAudioChunks.pop_front();
+        }
+
+        // add the new chunk to the queue
+        mAudioChunks.push_back(buffer);
+    } // release lock
+
+    APE_LOG_DEBUG("[AudioImpl]::loadNextAudioChunk() Added " << buffer.size() << " bytes of audio data.");
+    mpEventManagerImpl->fireEvent(ape::Event(mName, ape::Event::Type::AUDIO_CHUNK_LOAD));
+    return bytesRead > 0;
+}
+
+void ape::AudioImpl::removePlayedChunk()
+{
+    std::lock_guard<std::mutex> lock(mMutex);
+
+    if (!mAudioChunks.empty())
+    {
+        APE_LOG_DEBUG("[AudioImpl]::removePlayedChunk() Removing first chunk.");
+        mAudioChunks.pop_front();
+    }
 }
 
 void ape::AudioImpl::setFilePath(const std::string& filePath)
@@ -75,41 +150,10 @@ void ape::AudioImpl::setFilePath(const std::string& filePath)
     APE_LOG_DEBUG("[AudioImpl]::setFilePath() File size: " << mDataSize);
 }
 
-bool ape::AudioImpl::loadNextAudioChunk(size_t chunkSize)
-{
-    std::vector<uint8_t> buffer(chunkSize);
-
-    {
-        std::lock_guard<std::mutex> lock(mMutex);
-        APE_LOG_DEBUG("[AudioImpl]::loadNextAudioChunk() Loading next audio chunk...");
-
-        if (!mAudioFile.is_open() || mFilePosition >= mDataSize)
-        {
-            APE_LOG_DEBUG("[AudioImpl]::loadNextAudioChunk() End of file reached.");
-            return false;
-        }
-        APE_LOG_DEBUG("[AudioImpl]::loadNextAudioChunk() File position: " << mFilePosition);
-
-        mAudioFile.seekg(mFilePosition, std::ios::beg);
-        mAudioFile.read(reinterpret_cast<char*>(buffer.data()), chunkSize);
-        size_t bytesRead = mAudioFile.gcount();
-        APE_LOG_DEBUG("[AudioImpl]::loadNextAudioChunk() Read " << bytesRead << " bytes of audio data.");
-        buffer.resize(bytesRead);
-
-        mFilePosition += bytesRead;
-    } // release lock
-
-    appendAudioData(buffer);
-    mLastChunkData = buffer;
-    APE_LOG_DEBUG("[AudioImpl]::loadNextAudioChunk() Appended " << buffer.size() << " bytes of audio data.");
-    mpEventManagerImpl->fireEvent(ape::Event(mName, ape::Event::Type::AUDIO_CHUNK_LOAD));
-    return buffer.size() > 0;
-}
-
 std::vector<uint8_t> ape::AudioImpl::getLastChunkData()
 {
     std::lock_guard<std::mutex> lock(mMutex);
-    return mLastChunkData;
+    return mAudioChunks.back();
 }
 
 size_t ape::AudioImpl::getCurrentStreamPosition()
@@ -128,8 +172,8 @@ void ape::AudioImpl::seekTo(size_t newPosition)
     }
 
     mFilePosition = newPosition;
-    mAudioData.clear();
-    loadNextAudioChunk(mMaxBufferSize / 2);
+    mAudioChunks.clear();
+    loadNextAudioChunk(mChunkSize);
 
     APE_LOG_DEBUG("[AudioImpl] Seeked to new position: " << newPosition);
 }
@@ -188,7 +232,7 @@ RakNet::RM3SerializationResult ape::AudioImpl::Serialize(RakNet::SerializeParame
     mVariableDeltaSerializer.SerializeVariable(&serializationContext, RakNet::RakString(mName.c_str()));
     mVariableDeltaSerializer.SerializeVariable(&serializationContext, mSampleRate);
     mVariableDeltaSerializer.SerializeVariable(&serializationContext, mChannels);
-    mVariableDeltaSerializer.SerializeVariable(&serializationContext, mAudioData);
+    mVariableDeltaSerializer.SerializeVariable(&serializationContext, mAudioChunks);
     mVariableDeltaSerializer.EndSerialize(&serializationContext);
     return RakNet::RM3SR_BROADCAST_IDENTICALLY_FORCE_SERIALIZATION;
 }
@@ -210,9 +254,10 @@ void ape::AudioImpl::Deserialize(RakNet::DeserializeParameters* deserializeParam
     {
         mpEventManagerImpl->fireEvent(ape::Event(mName, ape::Event::Type::AUDIO_CHANNELS));
     }
-    if (mVariableDeltaSerializer.DeserializeVariable(&deserializationContext, mAudioData))
+    if (mVariableDeltaSerializer.DeserializeVariable(&deserializationContext, mAudioChunks))
     {
         mpEventManagerImpl->fireEvent(ape::Event(mName, ape::Event::Type::AUDIO_DATA));
+        
     }
     mVariableDeltaSerializer.EndDeserialize(&deserializationContext);
 }

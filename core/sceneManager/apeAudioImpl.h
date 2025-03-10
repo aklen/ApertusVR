@@ -20,11 +20,15 @@ namespace ape
 
         void setAudioData(const std::vector<uint8_t>& data) override;
 
+        std::vector<uint8_t> getAllAudioChunks() override;
+
         void appendAudioData(const std::vector<uint8_t>& newAudioData) override;
 
         void setFilePath(const std::string& filePath) override;
 
         bool loadNextAudioChunk(size_t chunkSize) override;
+
+        void removePlayedChunk() override;
 
         std::vector<uint8_t> getLastChunkData() override;
 
@@ -60,8 +64,13 @@ namespace ape
 
         std::mutex mMutex;
 
-        std::vector<uint8_t> mAudioData;
-        std::vector<uint8_t> mLastChunkData;
+
+        std::deque<std::vector<uint8_t>> mAudioChunks;
+        size_t mMaxChunks; // Maximum number of chunks to keep in memory
+        size_t mChunkSize; // Size of each chunk in bytes
+        size_t mPlayingChunkIndex; // Current position in the audio data
+
+        // std::vector<uint8_t> mAudioData;
         bool mStreaming;
 
         int mSampleRate;
