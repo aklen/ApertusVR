@@ -1,4 +1,5 @@
 #include "apeGStreamerPlugin.h"
+#include "apeUtils.h"
 
 static void on_pad_added(GstElement* src, GstPad* new_pad, gpointer data)
 {
@@ -166,11 +167,15 @@ void ape::apeGStreamerPlugin::Init()
 
         std::string audioFilePath = mConfig["audio"].getString("filePath");
         APE_LOG_DEBUG("[GStreamerPlugin]::Constructor() File path: " << audioFilePath);
+
+        std::string audioFileName = ape::utils::getFileNameFromPath(audioFilePath);
+        APE_LOG_DEBUG("[GStreamerPlugin]::Constructor() File name: " << audioFileName);
+
         std::string source = mConfig["audio"].getString("source");
         APE_LOG_DEBUG("[GStreamerPlugin]::Constructor() Source: " << source);
 
         // create an audio entity
-        if (auto audio = std::static_pointer_cast<ape::IAudio>(mpSceneManager->createEntity("audio_test", ape::Entity::AUDIO, true, mpCoreConfig->getNetworkGUID()).lock())) {
+        if (auto audio = std::static_pointer_cast<ape::IAudio>(mpSceneManager->createEntity("audio_" + audioFileName, ape::Entity::AUDIO, true, mpCoreConfig->getNetworkGUID()).lock())) {
             int channels = audio->getChannels();
             APE_LOG_DEBUG("[DataStreamerPlugin]::Init() Audio channels: " << channels);
 
