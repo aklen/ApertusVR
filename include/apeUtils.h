@@ -56,6 +56,11 @@ namespace ape::utils
 		return std::filesystem::current_path();
 	}
 
+	std::string getFileNameFromPath(const std::string& filePath)
+	{
+		return std::filesystem::path(filePath).filename().string();
+	}
+
 } // namespace ape::utils
 
 #endif
