@@ -45,6 +45,11 @@ For **experimental plugins**, install:
 sudo apt install -y gstreamer1.0-plugins-bad
 ```
 
+For GStreamer-Alsa plugin, install:
+```bash
+sudo apt install -y gstreamer1.0-alsa
+```
+
 Ensure the correct compiler versions are used:
 
 ```bash
