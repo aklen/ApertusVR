@@ -54,3 +54,6 @@ Makefile.inc.cmake
 *.userosscache
 *.sln.docstates
 *.patch
+
+# RakNet Punchthrough
+apeRaknetNatPunchthroughServer
