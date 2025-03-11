@@ -74,4 +74,13 @@ SOFTWARE.*/
 	#define APE_PLATFORM_STRING "Unknown"
 #endif
 
+// Define a platform-independent THREAD_HANDLE_NULL
+#if defined(APE_PLATFORM_WIN)
+    #define THREAD_HANDLE_NULL nullptr  // Windows uses nullptr for HANDLE
+#elif defined(APE_PLATFORM_APPLE) || defined(APE_PLATFORM_LINUX) || defined(APE_PLATFORM_UNIX) || defined(APE_PLATFORM_POSIX)
+    #define THREAD_HANDLE_NULL 0  // Linux/macOS/POSIX uses 0 for pthread_t
+#else
+    #error "Unsupported platform: THREAD_HANDLE_NULL is not defined for this OS"
+#endif
+
 #endif

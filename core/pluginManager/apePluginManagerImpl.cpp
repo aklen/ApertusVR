@@ -21,6 +21,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.*/
 
 #include "apePluginManagerImpl.h"
+#include "apePlatform.h"
 #include "rapidjson/document.h"
 #include "rapidjson/filereadstream.h"
 
@@ -141,7 +142,7 @@ void ape::PluginManagerImpl::StopPlugins()
 			APE_LOG_DEBUG("plugin is joinable, calling join()");
 			mThreadVector.at(i).join();
 		}
-		else if (mThreadVector.at(i).native_handle() != nullptr)  
+		else if (mThreadVector.at(i).native_handle() != THREAD_HANDLE_NULL)  
 		{
 			APE_LOG_DEBUG("plugin is not joinable, calling detach()");
 			mThreadVector.at(i).detach();
