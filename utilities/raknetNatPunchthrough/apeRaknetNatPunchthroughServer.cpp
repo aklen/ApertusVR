@@ -17,8 +17,17 @@ int main() {
         return EXIT_FAILURE;
     }
 
-    // Configure socket descriptors
-    RakNet::SocketDescriptor socketDescriptor(SERVER_PORT, nullptr);
+    // List all available network interfaces
+    std::cout << "Available network interfaces:" << std::endl;
+    for (int i = 0; i < MAXIMUM_NUMBER_OF_INTERNAL_IDS; i++) {
+        RakNet::SystemAddress addr = peer->GetLocalIP(i);
+        if (addr != RakNet::UNASSIGNED_SYSTEM_ADDRESS) {
+            std::cout << "  " << addr.ToString(true) << std::endl;
+        }
+    }
+
+    // Bind server to all network interfaces
+    RakNet::SocketDescriptor socketDescriptor(SERVER_PORT, "0.0.0.0");
     if (peer->Startup(MAX_CLIENTS, &socketDescriptor, 1) != RakNet::RAKNET_STARTED) {
         std::cerr << "Failed to start RakNet peer on port " << SERVER_PORT << std::endl;
         RakNet::RakPeerInterface::DestroyInstance(peer);
@@ -29,8 +38,8 @@ int main() {
     peer->SetTimeoutTime(TIMEOUT_MS, RakNet::UNASSIGNED_SYSTEM_ADDRESS);
     peer->SetMaximumIncomingConnections(MAX_CLIENTS);
 
-    std::cout << "NAT Punchthrough Server started on "
-              << peer->GetMyBoundAddress().ToString(true) << std::endl;
+    std::cout << "NAT Punchthrough Server started on ALL INTERFACES (0.0.0.0:" 
+              << SERVER_PORT << ")" << std::endl;
 
     // Attach NAT Punchthrough Server Plugin
     auto natServer = new RakNet::NatPunchthroughServer;
