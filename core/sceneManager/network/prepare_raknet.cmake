@@ -16,7 +16,7 @@ if(NOT ANDROID)
 	set (RAKNET_READY FALSE)
 
 	# use Position Independent Code on Linux
-	if (LINUX AND CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
+	if (LINUX)
 		message (STATUS "Use -fPIC in EXTRA_COMPILE_OPTIONS")
 		set(EXTRA_COMPILE_OPTIONS -fPIC)
 	endif ()
