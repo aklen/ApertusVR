@@ -71,7 +71,7 @@ ape::SceneNetworkImpl::SceneNetworkImpl()
 		{
             std::string lobbyIp = mpCoreConfig->getNetworkConfig().lobbyConfig.ip;
             std::string lobbyPort = mpCoreConfig->getNetworkConfig().lobbyConfig.port;
-            if (!lobbyIp.empty() && lobbyIp != "" && !lobbyPort.empty() && lobbyPort != "")
+            if (!lobbyIp.empty() && !lobbyPort.empty())
             {
                 bool createSessionResult = mpLobbyManager->createSession(mpCoreConfig->getNetworkConfig().lobbyConfig.roomName, mGuid.ToString());
 			    APE_LOG_DEBUG("lobbyManager->createSession(): " << createSessionResult);
@@ -314,16 +314,16 @@ void ape::SceneNetworkImpl::connect2ReplicaHost(std::string guid)
 	mReplicaHostGuid.FromString(guid.c_str());
 	if (mSelectedNetwork == ape::NetworkConfig::INTERNET)
 	{
-		APE_LOG_DEBUG("Try to NAT punch to host: " << mReplicaHostGuid.ToString());
+		APE_LOG_DEBUG("[SceneNetwork]::connect2ReplicaHost() INTERNET> Try to NAT punch to host: " << mReplicaHostGuid.ToString());
 		if (mpNatPunchthroughClient->OpenNAT(mReplicaHostGuid, mNATServerAddress))
 		{
-			APE_LOG_DEBUG("Wait for host response....");
+			APE_LOG_DEBUG("[SceneNetwork]::connect2ReplicaHost() INTERNET> Wait for host response....");
 			mIsNATPunchthrough2HostResponded = false;
 		}
 		else
 		{
 			mIsNATPunchthrough2HostResponded = true;
-			APE_LOG_DEBUG("Failed to connect.......");
+			APE_LOG_ERROR("[SceneNetwork]::connect2ReplicaHost() INTERNET> Failed to connect.......");
 		}
 	}
 	else if (mSelectedNetwork == ape::NetworkConfig::LAN)
@@ -332,15 +332,15 @@ void ape::SceneNetworkImpl::connect2ReplicaHost(std::string guid)
         std::string hostPort = mpCoreConfig->getNetworkConfig().lanConfig.hostReplicaPort;
         std::string host = hostIP + ":" + hostPort;
 
-		APE_LOG_DEBUG("Try to connect to host: " << host);
+		APE_LOG_DEBUG("[SceneNetwork]::connect2ReplicaHost() LAN> Try to connect to host: " << host);
 		RakNet::ConnectionAttemptResult car = mpRakReplicaPeer->Connect(hostIP.c_str(), atoi(hostPort.c_str()), 0, 0);
 		if (car != RakNet::CONNECTION_ATTEMPT_STARTED)
 		{
-			APE_LOG_DEBUG("Failed connect call to " << host << ". Code=" << car);
+			APE_LOG_DEBUG("[SceneNetwork]::connect2ReplicaHost() LAN> Failed connect call to " << host << ". Code=" << car);
 		}
 		else
 		{
-			APE_LOG_DEBUG("Connection attempt was successful to remote system " << host);
+			APE_LOG_DEBUG("[SceneNetwork]::connect2ReplicaHost() LAN> Connection attempt was successful to remote system " << host);
 		}
 	}
 }
@@ -356,7 +356,7 @@ void ape::SceneNetworkImpl::destroy()
 
 void ape::SceneNetworkImpl::createReplicaHost()
 {
-	APE_LOG_DEBUG("Listening....");
+	APE_LOG_DEBUG("[SceneNetwork]::createReplicaHost() Listening....");
 	if (mSelectedNetwork == ape::NetworkConfig::INTERNET)
 		mpNatPunchthroughClient->FindRouterPortStride(mNATServerAddress);
 }
@@ -424,7 +424,7 @@ void ape::SceneNetworkImpl::downloadConfigs(std::vector<std::string> configURLs,
 {
 	if (configURLs.size() && configLocations.size())
 	{
-		APE_LOG_DEBUG("use lobbyManager to update the configs...");
+		APE_LOG_DEBUG("[SceneNetwork]::downloadConfigs() use lobbyManager to update the configs...");
 		for (int i = 0; i < configURLs.size(); i++)
 		{
 			mpLobbyManager->downloadConfig(configURLs[i], configLocations[i]);
@@ -458,13 +458,17 @@ void ape::SceneNetworkImpl::listenReplicaPeer()
 	RakNet::Packet *packet;
 	for (packet = mpRakReplicaPeer->Receive(); packet; mpRakReplicaPeer->DeallocatePacket(packet), packet = mpRakReplicaPeer->Receive())
 	{
+		std::string address = packet->systemAddress.ToString(true);
+		std::string host = packet->systemAddress.ToString(false);
+		int port = packet->systemAddress.GetPort();
+		std::string guid = packet->guid.ToString();
 		switch (packet->data[0])
 		{
 			case ID_NEW_INCOMING_CONNECTION:
 				{
 					if (mSelectedNetwork == ape::NetworkConfig::INTERNET)
 					{
-						APE_LOG_DEBUG("ID_NEW_INCOMING_CONNECTION from " << packet->systemAddress.ToString() << " guid: " << packet->guid.ToString());
+						APE_LOG_DEBUG("[SceneNetwork] INTERNET> ID_NEW_INCOMING_CONNECTION from address:" << address << ", guid: " << guid);
 					}
 					else if (mSelectedNetwork == ape::NetworkConfig::LAN)
 					{
@@ -473,26 +477,26 @@ void ape::SceneNetworkImpl::listenReplicaPeer()
 							RakNet::Connection_RM3 *connection = mpReplicaManager3->AllocConnection(packet->systemAddress, packet->guid);
 							if (mpReplicaManager3->PushConnection(connection))
 							{
-								APE_LOG_DEBUG("Alloc connection to: " << packet->systemAddress.ToString() << " guid: " << packet->guid.ToString() << " was successful");
+								APE_LOG_DEBUG("[SceneNetwork] LAN:HOST> Alloc connection to address: " << address << ", guid: " << guid << " was successful");
 							}
 							else
 							{
 								mpReplicaManager3->DeallocConnection(connection);
-								APE_LOG_DEBUG("Alloc connection to: " << packet->systemAddress.ToString() << " guid: " << packet->guid.ToString() << " was not successful thus this was deallocated");
+								APE_LOG_ERROR("[SceneNetwork] LAN:HOST> Alloc connection to address: " << address << ", guid: " << guid << " was not successful thus this was deallocated");
 							}
 						}
 					}
 				}
 				break;
 			case ID_DISCONNECTION_NOTIFICATION:
-				APE_LOG_DEBUG("ID_DISCONNECTION_NOTIFICATION");
+				APE_LOG_DEBUG("[SceneNetwork] ID_DISCONNECTION_NOTIFICATION");
 				break;
 			case ID_CONNECTION_REQUEST_ACCEPTED:
 				{
-					APE_LOG_DEBUG("ID_CONNECTION_REQUEST_ACCEPTED from " << packet->systemAddress.ToString(true) << ", guid=" << packet->guid.ToString() << ", participantType=" << mParticipantType);
+					APE_LOG_DEBUG("[SceneNetwork] ID_CONNECTION_REQUEST_ACCEPTED from address: " << address << ", guid: " << guid << ", participantType: " << mParticipantType);
 					if (mSelectedNetwork == ape::NetworkConfig::INTERNET)
 					{
-						if (mNATServerIP == packet->systemAddress.ToString(false))
+						if (mNATServerIP == host)
 						{
 							mNATServerAddress = packet->systemAddress;
 							RakNet::ConnectionState cs = mpRakReplicaPeer->GetConnectionState(mNATServerAddress);
@@ -506,12 +510,12 @@ void ape::SceneNetworkImpl::listenReplicaPeer()
 							RakNet::Connection_RM3 *connection = mpReplicaManager3->AllocConnection(packet->systemAddress, packet->guid);
 							if (mpReplicaManager3->PushConnection(connection))
 							{
-								APE_LOG_DEBUG("Alloc connection to: " << packet->systemAddress.ToString() << " guid: " << packet->guid.ToString() << " was successful");
+								APE_LOG_DEBUG("[SceneNetwork] INTERNET:HOST> Alloc connection to address: " << address << ", guid: " << guid << " was successful");
 							}
 							else
 							{
 								mpReplicaManager3->DeallocConnection(connection);
-								APE_LOG_DEBUG("Alloc connection to: " << packet->systemAddress.ToString() << " guid: " << packet->guid.ToString() << " was not successful thus this was deallocated");
+								APE_LOG_ERROR("[SceneNetwork] INTERNET:GUEST> Alloc connection to address: " << address << ", guid: " << guid << " was not successful thus this was deallocated");
 							}
 						}
 					}
@@ -520,14 +524,14 @@ void ape::SceneNetworkImpl::listenReplicaPeer()
 						if (mParticipantType == ape::SceneNetwork::ParticipantType::HOST)
 						{
 							mpRakReplicaPeer->GetConnectionState(packet->systemAddress);
-							RakNet::ConnectionAttemptResult car = mpRakReplicaPeer->Connect(packet->systemAddress.ToString(false), packet->systemAddress.GetPort(), 0, 0);
+							RakNet::ConnectionAttemptResult car = mpRakReplicaPeer->Connect(host.c_str(), port, 0, 0);
 							if (car != RakNet::CONNECTION_ATTEMPT_STARTED)
 							{
-								APE_LOG_DEBUG("Failed connect call to " << packet->systemAddress.ToString(true) << ". Code=" << car);
+								APE_LOG_ERROR("[SceneNetwork] LAN:HOST> Failed connect call to address: " << address << ", code: " << car);
 							}
 							else
 							{
-								APE_LOG_DEBUG("Connection success from remote system " << packet->systemAddress.ToString(true));
+								APE_LOG_DEBUG("[SceneNetwork] LAN:HOST> Connection success from remote address: " << address);
 							}
 						}
 						else if (mParticipantType == ape::SceneNetwork::ParticipantType::GUEST)
@@ -535,12 +539,12 @@ void ape::SceneNetworkImpl::listenReplicaPeer()
 							RakNet::Connection_RM3 *connection = mpReplicaManager3->AllocConnection(packet->systemAddress, packet->guid);
 							if (mpReplicaManager3->PushConnection(connection))
 							{
-								APE_LOG_DEBUG("Alloc connection to: " << packet->systemAddress.ToString() << " guid: " << packet->guid.ToString() << " was successful");
+								APE_LOG_DEBUG("[SceneNetwork] LAN:GUEST> Alloc connection to address: " << address << ", guid: " << guid << " was successful");
 							}
 							else
 							{
 								mpReplicaManager3->DeallocConnection(connection);
-								APE_LOG_DEBUG("Alloc connection to: " << packet->systemAddress.ToString() << " guid: " << packet->guid.ToString() << " was not successful thus this was deallocated");
+								APE_LOG_ERROR("[SceneNetwork] LAN:GUEST> Alloc connection to address: " << address << ", guid: " << guid << " was not successful thus this was deallocated");
 							}
 						}
 					}
@@ -548,12 +552,12 @@ void ape::SceneNetworkImpl::listenReplicaPeer()
 				break;
 			case ID_ALREADY_CONNECTED:
 				{
-					APE_LOG_DEBUG("ID_ALREADY_CONNECTED with: " << packet->systemAddress.ToString() << " guid: " << packet->guid.ToString());
+					APE_LOG_DEBUG("[SceneNetwork] ID_ALREADY_CONNECTED with address: " << address << ", guid: " << guid);
 					break;
 				}
 			case ID_INCOMPATIBLE_PROTOCOL_VERSION:
 				{
-					APE_LOG_DEBUG("Failed to connect to: " << packet->systemAddress.ToString() << ". Reason:" << RakNet::PacketLogger::BaseIDTOString(packet->data[0]));
+					APE_LOG_ERROR("[SceneNetwork] Failed to connect to address: " << address << ". Reason: " << RakNet::PacketLogger::BaseIDTOString(packet->data[0]));
 					break;
 				}
 			case ID_NAT_TARGET_NOT_CONNECTED:
@@ -564,7 +568,7 @@ void ape::SceneNetworkImpl::listenReplicaPeer()
 				{
 					mIsNATPunchthrough2HostResponded = true;
 					mIsNATPunchthrough2HostSucceeded = false;
-					APE_LOG_DEBUG("NAT punch to: " << packet->guid.ToString() << " failed. Reason: " << RakNet::PacketLogger::BaseIDTOString(packet->data[0]));
+					APE_LOG_ERROR("[SceneNetwork] NAT punch to guid: " << packet->guid.ToString() << " failed. Reason: " << RakNet::PacketLogger::BaseIDTOString(packet->data[0]));
 					break;
 				}
 			case ID_NAT_PUNCHTHROUGH_SUCCEEDED:
@@ -580,11 +584,11 @@ void ape::SceneNetworkImpl::listenReplicaPeer()
 							RakNet::ConnectionAttemptResult car = mpRakReplicaPeer->Connect(packet->systemAddress.ToString(false), packet->systemAddress.GetPort(), 0, 0);
 							if (car != RakNet::CONNECTION_ATTEMPT_STARTED)
 							{
-								APE_LOG_DEBUG("Failed connect call to " << packet->systemAddress.ToString(true) << ". Code=" << car);
+								APE_LOG_ERROR("[SceneNetwork] INTERNET:HOST> Failed connect call to address: " << address << ". Code=" << car);
 							}
 							else
 							{
-								APE_LOG_DEBUG("NAT punch success from remote system " << packet->systemAddress.ToString(true));
+								APE_LOG_DEBUG("[SceneNetwork] INTERNET:HOST> NAT punch success from remote address: " << address);
 							}
 						}
 						else if (mParticipantType == ape::SceneNetwork::ParticipantType::GUEST)
@@ -595,11 +599,11 @@ void ape::SceneNetworkImpl::listenReplicaPeer()
 								RakNet::ConnectionAttemptResult car = mpRakReplicaPeer->Connect(packet->systemAddress.ToString(false), packet->systemAddress.GetPort(), 0, 0);
 								if (car != RakNet::CONNECTION_ATTEMPT_STARTED)
 								{
-									APE_LOG_DEBUG("Failed connect call to " << packet->systemAddress.ToString(true) << ". Code=" << car);
+									APE_LOG_ERROR("[SceneNetwork] INTERNET:GUEST> Failed connect call to address: " << address << ". Code=" << car);
 								}
 								else
 								{
-									APE_LOG_DEBUG("NAT punch success from remote system " << packet->systemAddress.ToString(true));
+									APE_LOG_DEBUG("[SceneNetwork] INTERNET:GUEST> NAT punch success from remote address: " << address);
 								}
 							}
 							else
@@ -607,12 +611,12 @@ void ape::SceneNetworkImpl::listenReplicaPeer()
 								RakNet::Connection_RM3 *connection = mpReplicaManager3->AllocConnection(packet->systemAddress, packet->guid);
 								if (mpReplicaManager3->PushConnection(connection))
 								{
-									APE_LOG_DEBUG("Alloc connection to: " << packet->systemAddress.ToString() << " guid: " << packet->guid.ToString() << " was successful");
+									APE_LOG_DEBUG("[SceneNetwork] INTERNET:GUEST> Alloc connection to address: " << address << ", guid: " << guid << " was successful");
 								}
 								else
 								{
 									mpReplicaManager3->DeallocConnection(connection);
-									APE_LOG_DEBUG("Alloc connection to: " << packet->systemAddress.ToString() << " guid: " << packet->guid.ToString() << " was not successful thus this was deallocated");
+									APE_LOG_ERROR("[SceneNetwork] INTERNET:GUEST> Alloc connection to address: " << address << ", guid: " << guid << " was not successful thus this was deallocated");
 								}
 							}
 						}
@@ -623,13 +627,19 @@ void ape::SceneNetworkImpl::listenReplicaPeer()
 				{
 					if (mpReplicaManager3->GetAllConnectionDownloadsCompleted() == true)
 					{
-						APE_LOG_DEBUG("Completed all remote downloads");
+						APE_LOG_DEBUG("[SceneNetwork] Completed all remote downloads");
 						if (!mIsStreamHost && mSelectedNetwork == ape::NetworkConfig::Selected::LAN)
 						{
-							APE_LOG_DEBUG("Try to connect to stream host: " << mpCoreConfig->getNetworkConfig().lanConfig.hostStreamIP << "|" << mpCoreConfig->getNetworkConfig().lanConfig.hostStreamPort);
-							RakNet::ConnectionAttemptResult car = mpRakStreamPeer->Connect(mpCoreConfig->getNetworkConfig().lanConfig.hostStreamIP.c_str(), atoi(mpCoreConfig->getNetworkConfig().lanConfig.hostStreamPort.c_str()), 0, 0);
-							APE_LOG_DEBUG("Raknet Stream Connection to Host Result: " << (int)car);
-							RakAssert(car == RakNet::RAKNET_STARTED);
+							std::string hostStreamIP = mpCoreConfig->getNetworkConfig().lanConfig.hostStreamIP;
+							std::string hostStreamPort = mpCoreConfig->getNetworkConfig().lanConfig.hostStreamPort;
+
+							if (!hostStreamIP.empty() && !hostStreamPort.empty())
+							{
+								APE_LOG_DEBUG("[SceneNetwork] Try to connect to stream host: " << hostStreamIP << "|" << hostStreamPort);
+								RakNet::ConnectionAttemptResult car = mpRakStreamPeer->Connect(hostStreamIP.c_str(), atoi(hostStreamPort.c_str()), 0, 0);
+								APE_LOG_DEBUG("[SceneNetwork] Raknet Stream Connection to Host Result: " << (int)car);
+								RakAssert(car == RakNet::RAKNET_STARTED);
+							}
 						}
 					}
 					break;
