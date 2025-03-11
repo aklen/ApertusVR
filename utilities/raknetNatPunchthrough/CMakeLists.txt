@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.10)
 project(NatPunchThrough)
 
-# RakNet könyvtárak
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 set(RAKNET_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../thirdparty/raknet/include/RakNet")
 set(RAKNET_LIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../ApertusVR-build/raknet/build/Lib/LibStatic")
 
