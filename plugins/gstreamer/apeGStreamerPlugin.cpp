@@ -182,24 +182,24 @@ void ape::apeGStreamerPlugin::Init()
         // mConfig.print();
 
         std::string audioFilePath = mConfig["audio"].getString("filePath");
-        APE_LOG_DEBUG("[GStreamerPlugin]::Constructor() File path: " << audioFilePath);
+        APE_LOG_DEBUG("[GStreamerPlugin]::Init() File path: " << audioFilePath);
 
         std::string audioFileName = ape::utils::getFileNameFromPath(audioFilePath);
-        APE_LOG_DEBUG("[GStreamerPlugin]::Constructor() File name: " << audioFileName);
+        APE_LOG_DEBUG("[GStreamerPlugin]::Init() File name: " << audioFileName);
 
         std::string source = mConfig["audio"].getString("source");
-        APE_LOG_DEBUG("[GStreamerPlugin]::Constructor() Source: " << source);
+        APE_LOG_DEBUG("[GStreamerPlugin]::Init() Source: " << source);
 
         // create an audio entity
         mCurrentAudioEntityId = "audio_" + audioFileName;
         if (auto audio = std::static_pointer_cast<ape::IAudio>(mpSceneManager->createEntity(mCurrentAudioEntityId, ape::Entity::AUDIO, true, mpCoreConfig->getNetworkGUID()).lock())) {
             int channels = audio->getChannels();
-            APE_LOG_DEBUG("[DataStreamerPlugin]::Init() Audio channels: " << channels);
+            APE_LOG_DEBUG("[GStreamerPlugin]::Init() Audio channels: " << channels);
 
             // load the first chunk of the audio file
             audio->setFilePath(audioFilePath);
             bool firstLoaded = audio->loadNextAudioChunk(APE_AUDIO_CHUNK_SIZE_1MB);
-            APE_LOG_DEBUG("[DataStreamerPlugin]::Init() First chunk loaded: " << firstLoaded);
+            APE_LOG_DEBUG("[GStreamerPlugin]::Init() First chunk loaded: " << firstLoaded);
         }
     }
 
