@@ -27,6 +27,7 @@ SOFTWARE.*/
 #include <stdlib.h>
 #include <thread>
 #include <atomic>
+#include <cstring>
 
 std::atomic<bool> shouldStop = false;
 
