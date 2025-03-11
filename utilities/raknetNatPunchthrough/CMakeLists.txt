@@ -1,46 +1,23 @@
-#MIT License
-#
-#Copyright (c) 2016 MTA SZTAKI
-#
-#Permission is hereby granted, free of charge, to any person obtaining a copy
-#of this software and associated documentation files (the "Software"), to deal
-#in the Software without restriction, including without limitation the rights
-#to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-#copies of the Software, and to permit persons to whom the Software is
-#furnished to do so, subject to the following conditions:
-#
-#The above copyright notice and this permission notice shall be included in all
-#copies or substantial portions of the Software.
-#
-#THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-#IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-#FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-#AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-#LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-#OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-#SOFTWARE.
+cmake_minimum_required(VERSION 3.10)
+project(NatPunchThrough)
 
-set (SOURCES
-	ApeRaknetNatPunchthroughServer.cpp
-	)
+# RakNet könyvtárak
+set(RAKNET_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../thirdparty/raknet/include/RakNet")
+set(RAKNET_LIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../ApertusVR-build/raknet/build/Lib/LibStatic")
 
-include_directories(
-	${RAKNET_INCLUDE_DIR}
-	)
+message(STATUS "RakNet include dir: ${RAKNET_INCLUDE_DIR}")
+message(STATUS "RakNet library dir: ${RAKNET_LIB_DIR}")
 
-add_executable(ApeRaknetNatPunchthroughServer ${SOURCES})
+set(SOURCES apeRaknetNatPunchthroughServer.cpp)
+
+include_directories(${RAKNET_INCLUDE_DIR})
+add_executable(apeRaknetNatPunchthroughServer ${SOURCES})
 
 if(WIN32)
-	target_link_libraries(ApeRaknetNatPunchthroughServer RAKNET ws2_32)
+        target_link_libraries(apeRaknetNatPunchthroughServer ws2_32 ${RAKNET_LIB_DIR}/RakNetLibStatic.lib)
 else()
-	find_package (Threads)
-	target_link_libraries(ApeRaknetNatPunchthroughServer ${CMAKE_THREAD_LIBS_INIT} RAKNET )
+        find_package(Threads REQUIRED)
+        target_link_libraries(apeRaknetNatPunchthroughServer Threads::Threads ${RAKNET_LIB_DIR}/libRakNetLibStatic.a pthread)
 endif()
 
-
-set_property (TARGET ApeRaknetNatPunchthroughServer PROPERTY FOLDER "Servers")
-
-
-
-
-
+set_property (TARGET apeRaknetNatPunchthroughServer PROPERTY FOLDER "Servers")
