@@ -63,6 +63,7 @@ ape::apeGStreamerPlugin::apeGStreamerPlugin()
     mpEventManager->connectEvent(ape::Event::Group::AUDIO, std::bind(&apeGStreamerPlugin::eventCallBack, this, std::placeholders::_1));
     mpSceneManager = ape::ISceneManager::getSingletonPtr();
     mCurrentAudioEntityId = "";
+    mIsHost = mpCoreConfig->getNetworkConfig().participant == SceneNetwork::ParticipantType::HOST;
 
     // GStreamer initialization
     gst_init(nullptr, nullptr);
@@ -170,6 +171,11 @@ void ape::apeGStreamerPlugin::eventCallBack(const ape::Event& event)
 void ape::apeGStreamerPlugin::Init()
 {
 	APE_LOG_FUNC_ENTER();
+
+    if (!mIsHost) {
+        APE_LOG_DEBUG("[GStreamerPlugin]::Init() Not host, skipping initialization.");
+        return;
+    }
 
     // plugin config
     if (mpConfigManager->loadJson(mpCoreConfig->getConfigFolderPath() + "/" + THIS_PLUGINNAME + ".json", mConfig)) {

@@ -72,6 +72,7 @@ namespace ape
 		ape::ISceneManager* mpSceneManager;
 		void eventCallBack(const ape::Event& event);
 		ConfigNode mConfig;
+		bool mIsHost;
 
 		GstElement* pipeline_uri;  // URI alapú lejátszáshoz
         GstElement* pipeline_chunk;  // Chunk alapú lejátszáshoz
