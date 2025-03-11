@@ -1,15 +1,14 @@
 {
     "plugins": [
-      "apeGStreamerPlugin",
-      "apeHelloWorldScenePlugin"
+      "apeGStreamerPlugin"
     ],
     "network": {
-      "user": "guest user",
+      "user": "gstreamerGuest",
       "participant": "guest",
       "internet": {
         "natPunchThrough": {
-          "ip": "",
-          "port": ""
+          "ip": "195.111.2.95",
+          "port": "61666"
         },
         "lobby": {
           "ip": "",
@@ -23,7 +22,7 @@
         "hostStreamIP": "",
         "hostStreamPort": ""
       },
-      "selected": "lan"
+      "selected": "internet"
     }
   }
   
