@@ -117,6 +117,7 @@ int main() {
             if (packet->length > 0)
             {
                 std::cout << "Received packet type: " << getPacketTypeName((int)packet->data[0])
+                          << " (packet length: " << packet->length << ") "
                           << " from " << packet->systemAddress.ToString(true) << std::endl;
             }
             if (errno != 0)
