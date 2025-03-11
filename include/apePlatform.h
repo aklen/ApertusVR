@@ -46,6 +46,7 @@ SOFTWARE.*/
 		
 		#if defined(__arm64__)
 			#define APE_PLATFORM_STRING "Apple M1 - MacOS"
+			#define APE_PLATFORM_APPLE_M1
 		#elif defined(__x86_64__)
 			#define APE_PLATFORM_STRING "Apple X86/64 - MacOS"
 		#else
