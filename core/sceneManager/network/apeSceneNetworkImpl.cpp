@@ -69,8 +69,16 @@ ape::SceneNetworkImpl::SceneNetworkImpl()
 		init();
 		if (mSelectedNetwork == ape::NetworkConfig::INTERNET)
 		{
-			bool createSessionResult = mpLobbyManager->createSession(mpCoreConfig->getNetworkConfig().lobbyConfig.roomName, mGuid.ToString());
-			APE_LOG_DEBUG("lobbyManager->createSession(): " << createSessionResult);
+            std::string lobbyIp = mpCoreConfig->getNetworkConfig().lobbyConfig.ip;
+            std::string lobbyPort = mpCoreConfig->getNetworkConfig().lobbyConfig.port;
+            if (!lobbyIp.empty() && lobbyIp != "" && !lobbyPort.empty() && lobbyPort != "")
+            {
+                bool createSessionResult = mpLobbyManager->createSession(mpCoreConfig->getNetworkConfig().lobbyConfig.roomName, mGuid.ToString());
+			    APE_LOG_DEBUG("lobbyManager->createSession(): " << createSessionResult);
+            }
+            else {
+                APE_LOG_ERROR("Lobby IP or port is empty. Cannot create session.");
+            }
 		}
 		createReplicaHost();
 	}
@@ -81,14 +89,22 @@ ape::SceneNetworkImpl::SceneNetworkImpl()
 		std::string uuid;
 		if (mSelectedNetwork == ape::NetworkConfig::INTERNET)
 		{
-			APE_LOG_DEBUG("use lobbyManager to get scene session guid");
-			std::string name = mpCoreConfig->getNetworkConfig().lobbyConfig.roomName;
-			bool getSessionRes = mpLobbyManager->getSessionHostGuid(name, uuid);
-			APE_LOG_DEBUG("lobbyManager->getSessionHostGuid() res: " << getSessionRes << " uuid: " << uuid);
-			//if (getSessionRes && !uuid.empty())
-			//{
-				//connect2ReplicaHost(uuid);
-			//}
+            std::string lobbyIp = mpCoreConfig->getNetworkConfig().lobbyConfig.ip;
+            std::string lobbyPort = mpCoreConfig->getNetworkConfig().lobbyConfig.port;
+
+            if (!lobbyIp.empty() && lobbyIp != "" && !lobbyPort.empty() && lobbyPort != "") {
+                APE_LOG_DEBUG("use lobbyManager to get scene session guid");
+                std::string name = mpCoreConfig->getNetworkConfig().lobbyConfig.roomName;
+                bool getSessionRes = mpLobbyManager->getSessionHostGuid(name, uuid);
+                APE_LOG_DEBUG("lobbyManager->getSessionHostGuid() res: " << getSessionRes << " uuid: " << uuid);
+                //if (getSessionRes && !uuid.empty())
+                //{
+                    //connect2ReplicaHost(uuid);
+                //}
+            }
+            else {
+                APE_LOG_ERROR("Lobby IP or port is empty. Cannot create session.");
+            }
 		}
 		/*while (!mIsNATPunchthrough2HostSucceeded)
 		{*/
@@ -200,11 +216,6 @@ void ape::SceneNetworkImpl::init()
 	ape::NetworkConfig::NatPunchThroughConfig natPunchThroughServerConfig = mpCoreConfig->getNetworkConfig().natPunchThroughConfig;
 	mNATServerIP = natPunchThroughServerConfig.ip;
 	mNATServerPort = natPunchThroughServerConfig.port;
-	if (mNATServerIP == "" || mNATServerPort == "")
-	{
-		APE_LOG_ERROR("No valid NAT punchthrough server configuration found. Skipping network initialization.");
-		return;
-	}
 
 	ape::NetworkConfig::LanConfig localNetworkConfig = mpCoreConfig->getNetworkConfig().lanConfig;
 	mpRakReplicaPeer = RakNet::RakPeerInterface::GetInstance();
@@ -317,15 +328,19 @@ void ape::SceneNetworkImpl::connect2ReplicaHost(std::string guid)
 	}
 	else if (mSelectedNetwork == ape::NetworkConfig::LAN)
 	{
-		APE_LOG_DEBUG("Try to connect to host IP: " << mpCoreConfig->getNetworkConfig().lanConfig.hostReplicaIP << " port: " << mpCoreConfig->getNetworkConfig().lanConfig.hostReplicaPort);
-		RakNet::ConnectionAttemptResult car = mpRakReplicaPeer->Connect(mpCoreConfig->getNetworkConfig().lanConfig.hostReplicaIP.c_str(), atoi(mpCoreConfig->getNetworkConfig().lanConfig.hostReplicaPort.c_str()), 0, 0);
+        std::string hostIP = mpCoreConfig->getNetworkConfig().lanConfig.hostReplicaIP;
+        std::string hostPort = mpCoreConfig->getNetworkConfig().lanConfig.hostReplicaPort;
+        std::string host = hostIP + ":" + hostPort;
+
+		APE_LOG_DEBUG("Try to connect to host: " << host);
+		RakNet::ConnectionAttemptResult car = mpRakReplicaPeer->Connect(hostIP.c_str(), atoi(hostPort.c_str()), 0, 0);
 		if (car != RakNet::CONNECTION_ATTEMPT_STARTED)
 		{
-			APE_LOG_DEBUG("Failed connect call to " << mpCoreConfig->getNetworkConfig().lanConfig.hostReplicaPort << ". Code=" << car);
+			APE_LOG_DEBUG("Failed connect call to " << host << ". Code=" << car);
 		}
 		else
 		{
-			APE_LOG_DEBUG("Connection attempt was successful to remote system " << mpCoreConfig->getNetworkConfig().lanConfig.hostReplicaPort);
+			APE_LOG_DEBUG("Connection attempt was successful to remote system " << host);
 		}
 	}
 }
@@ -381,17 +396,26 @@ void ape::SceneNetworkImpl::connectToRoom(std::string roomName, std::vector<std:
 	std::string uuid;
 	if (mSelectedNetwork == ape::NetworkConfig::INTERNET)
 	{
-		if (configURLs.size() && configLocations.size())
-		{
-			APE_LOG_DEBUG("use lobbyManager to update the configs...");
-			for (int i = 0; i < configURLs.size(); i++)
-			{
-				mpLobbyManager->downloadConfig(configURLs[i], configLocations[i]);
-			}
-		}
-		APE_LOG_DEBUG("use lobbyManager to get scene session guid");
-		bool getSessionRes = mpLobbyManager->getSessionHostGuid(roomName, uuid);
-		APE_LOG_DEBUG("lobbyManager->getSessionHostGuid() res: " << getSessionRes << " uuid: " << uuid);
+        std::string lobbyIp = mpCoreConfig->getNetworkConfig().lobbyConfig.ip;
+        std::string lobbyPort = mpCoreConfig->getNetworkConfig().lobbyConfig.port;
+
+        if (!lobbyIp.empty() && lobbyIp != "" && !lobbyPort.empty() && lobbyPort != "")
+        {
+            if (configURLs.size() && configLocations.size())
+            {
+                APE_LOG_DEBUG("use lobbyManager to update the configs...");
+                for (int i = 0; i < configURLs.size(); i++)
+                {
+                    mpLobbyManager->downloadConfig(configURLs[i], configLocations[i]);
+                }
+            }
+            APE_LOG_DEBUG("use lobbyManager to get scene session guid");
+            bool getSessionRes = mpLobbyManager->getSessionHostGuid(roomName, uuid);
+            APE_LOG_DEBUG("lobbyManager->getSessionHostGuid() res: " << getSessionRes << " uuid: " << uuid);
+        }
+        else {
+            APE_LOG_ERROR("Lobby IP or port is empty. Cannot create session.");
+        }
 	}
 	connect2ReplicaHost(uuid);
 }
