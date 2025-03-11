@@ -113,6 +113,7 @@ include_directories(
 	${CURL_INCLUDE_DIRS}
 	${APE_THIRDPARTY_DIR}/rapidjson/include/
 	${APE_THIRDPARTY_DIR}/raknet/include/RakNet/
+	${APE_THIRDPARTY_DIR}/zip/src/
 	${MY_ZIP_INCLUDE_DIR}
 	)
 
