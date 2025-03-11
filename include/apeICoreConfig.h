@@ -54,7 +54,6 @@ namespace ape
 		struct NatPunchThroughConfig
 		{
 			std::string ip;
-
 			std::string port;
 
 			NatPunchThroughConfig()
@@ -101,11 +100,8 @@ namespace ape
 		struct LanConfig
 		{
 			std::string hostReplicaIP;
-
 			std::string hostReplicaPort;
-
 			std::string hostStreamIP;
-
 			std::string hostStreamPort;
 
 			LanConfig()
