@@ -18,9 +18,31 @@ sudo apt install -y \
     g++-10
 ```
 
-GStreamer (optional)
+### GStreamer Dependencies (Optional)
+The following packages are needed if GStreamer support is required:
+
+| Package | Description | Required? |
+|---------|------------|-----------|
+| **libgstreamer1.0-dev** | GStreamer core development files | ✅ Yes, for GStreamer support |
+| **libgstreamer-plugins-base1.0-dev** | Essential GStreamer plugins | ✅ Yes, for basic functionality |
+| **gstreamer1.0-tools** | Command-line tools for debugging and testing | ⚠️ Optional |
+| **gstreamer1.0-plugins-good** | Good quality GStreamer plugins (e.g., MP3 support) | ⚠️ Recommended |
+| **gstreamer1.0-plugins-bad** | Experimental GStreamer plugins | ⚠️ Optional, for advanced features |
+
+#### Install Required GStreamer Packages
+For **basic GStreamer support**, install:
 ```bash
-sudo apt install -y libgstreamer1.0-dev gstreamer1.0-plugins-base gstreamer1.0-tools gstreamer1.0-plugins-good gstreamer1.0-plugins-bad
+sudo apt install -y libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
+```
+
+For **additional tools and better media support**, install:
+```bash
+sudo apt install -y gstreamer1.0-tools gstreamer1.0-plugins-good
+```
+
+For **experimental plugins**, install:
+```bash
+sudo apt install -y gstreamer1.0-plugins-bad
 ```
 
 Ensure the correct compiler versions are used:
