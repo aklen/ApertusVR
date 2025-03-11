@@ -9,6 +9,8 @@
 #include <random>
 #include <thread>
 #include <vector>
+#include <atomic>
+#include <string>
 #include "apePluginAPI.h"
 #include "apeIEventManager.h"
 #include "apeEventManagerImpl.h"
