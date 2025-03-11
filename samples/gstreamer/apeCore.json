@@ -17,12 +17,12 @@
         }
       },
       "lan": {
-        "hostReplicaIP": "",
-        "hostReplicaPort": "",
-        "hostStreamIP": "192.168.100.96",
-        "hostStreamPort": "8888"
+        "hostReplicaIP": "192.168.100.95",
+        "hostReplicaPort": "8888",
+        "hostStreamIP": "",
+        "hostStreamPort": ""
       },
-      "selected": "internet"
+      "selected": "lan"
     }
   }
   

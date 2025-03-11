@@ -22,7 +22,7 @@
         "hostStreamIP": "",
         "hostStreamPort": ""
       },
-      "selected": "internet"
+      "selected": "lan"
     }
   }
   
