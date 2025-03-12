@@ -35,6 +35,8 @@ namespace ape
         std::deque<std::vector<uint8_t>> mAudioChunks;
         size_t mMaxChunks; // Maximum number of chunks to keep in memory
         size_t mPlayingChunkIndex; // Current position in the audio data
+
+        bool modified;
     };
 }
 

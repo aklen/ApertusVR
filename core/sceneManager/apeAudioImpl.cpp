@@ -7,6 +7,7 @@ ape::AudioImpl::AudioImpl(std::string name, bool replicate, std::string ownerID,
     mpSceneManager = ape::ISceneManager::getSingletonPtr();
     mAudioChunks = std::deque<std::vector<uint8_t>>();
     mMaxChunks = 2;
+    modified = false;
 }
 
 ape::AudioImpl::~AudioImpl()
@@ -30,6 +31,8 @@ void ape::AudioImpl::appendAudioData(const std::vector<uint8_t>& newAudioData)
     }
 
     mAudioChunks.push_back(newAudioData);
+    modified = true;
+
     mpEventManagerImpl->fireEvent(ape::Event(mName, ape::Event::Type::AUDIO_CHUNK_LOAD));
 }
 
@@ -50,6 +53,10 @@ void ape::AudioImpl::WriteAllocationID(RakNet::Connection_RM3* destinationConnec
 
 RakNet::RM3SerializationResult ape::AudioImpl::Serialize(RakNet::SerializeParameters* serializeParameters)
 {
+    if (!modified)
+        return RakNet::RM3SR_DO_NOT_SERIALIZE;
+
+    APE_LOG_DEBUG("AudioImpl::Serialize() called");
     RakNet::VariableDeltaSerializer::SerializationContext serializationContext;
     serializeParameters->pro[0].reliability = RELIABLE_ORDERED;
     mVariableDeltaSerializer.BeginIdenticalSerialize(&serializationContext, serializeParameters->whenLastSerialized == 0, &serializeParameters->outputBitstream[0]);
@@ -79,12 +86,14 @@ RakNet::RM3SerializationResult ape::AudioImpl::Serialize(RakNet::SerializeParame
     // save the current playing chunk index
     mVariableDeltaSerializer.SerializeVariable(&serializationContext, mPlayingChunkIndex);
 
+    modified = false;
     mVariableDeltaSerializer.EndSerialize(&serializationContext);
     return RakNet::RM3SR_BROADCAST_IDENTICALLY_FORCE_SERIALIZATION;
 }
 
 void ape::AudioImpl::Deserialize(RakNet::DeserializeParameters* deserializeParameters)
 {
+    APE_LOG_DEBUG("AudioImpl::Deserialize() called");
     RakNet::VariableDeltaSerializer::DeserializationContext deserializationContext;
     mVariableDeltaSerializer.BeginDeserialize(&deserializationContext, &deserializeParameters->serializationBitstream[0]);
 
