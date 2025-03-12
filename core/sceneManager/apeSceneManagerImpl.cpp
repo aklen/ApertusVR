@@ -21,6 +21,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.*/
 
 #include "apeSceneManagerImpl.h"
+#include "apeSceneNetworkImpl.h"
+#include "apeEventManagerImpl.h"
+
 #include "apeAudioImpl.h"
 #include "apeNodeImpl.h"
 #include "apeLightImpl.h"
@@ -48,8 +51,6 @@ SOFTWARE.*/
 #include "apeWaterImpl.h"
 #include "apePointCloudImpl.h"
 #include "apeFileTextureImpl.h"
-#include "apeSceneNetworkImpl.h"
-#include "apeEventManagerImpl.h"
 #include "apeRigidBodyImpl.h"
 #include "apeCommandImpl.h"
 #include "apeCommandResponseImpl.h"
@@ -59,20 +60,29 @@ ape::SceneManagerImpl::SceneManagerImpl()
 	APE_LOG_FUNC_ENTER();
 	msSingleton = this;
 	mpEventManager = ape::IEventManager::getSingletonPtr();
+	mpCoreConfig = ape::ICoreConfig::getSingletonPtr();
 	mpSceneNetwork = new ape::SceneNetworkImpl();
 	mNodes = ape::NodeSharedPtrNameMap();
 	mEntities = ape::EntitySharedPtrNameMap();
-	mpCoreConfig = ape::ICoreConfig::getSingletonPtr();
+	mCommands = ape::CommandSharedPtrNameMap();
+	mCommandResponses = ape::CommandResponseSharedPtrNameMap();
 	APE_LOG_FUNC_LEAVE();
 }
 
 ape::SceneManagerImpl::~SceneManagerImpl()
 {
 	APE_LOG_FUNC_ENTER();
+
+	// clear all stored data
 	mNodes.clear();
 	mEntities.clear();
+	mCommands.clear();
+	mCommandResponses.clear();
+
+	// delete the scene network
 	delete (ape::SceneNetworkImpl*)mpSceneNetwork;
 	mpSceneNetwork = nullptr;
+
 	APE_LOG_FUNC_LEAVE();
 }
 

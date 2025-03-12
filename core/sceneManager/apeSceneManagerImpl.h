@@ -48,48 +48,42 @@ namespace ape
 
 		~SceneManagerImpl();
 
+		// nodes
 		ape::NodeWeakPtrNameMap getNodes() override;
-
 		ape::NodeWeakPtr getNode(std::string name) override;
-
 		ape::NodeWeakPtr createNode(std::string name, bool replicate, std::string ownerID) override;
-
-		ape::EntityWeakPtrNameMap getEntities() override;
-
-		ape::EntityWeakPtr getEntity(std::string name) override;
-
-		ape::EntityWeakPtr createEntity(std::string name, ape::Entity::Type type, bool replicate, std::string ownerID) override;
-
 		void deleteNode(std::string name) override;
 
+		// entities
+		ape::EntityWeakPtrNameMap getEntities() override;
+		ape::EntityWeakPtr getEntity(std::string name) override;
+		ape::EntityWeakPtr createEntity(std::string name, ape::Entity::Type type, bool replicate, std::string ownerID) override;
 		void deleteEntity(std::string name) override;
 
+		// commands
 		ape::CommandWeakPtr getCommand(std::string name) override;
-
 		ape::CommandWeakPtr createCommand(std::string name, bool replicate, std::string ownerID, ape::Command::RunMode runMode, std::string userToRun) override;
-
 		void deleteCommand(std::string name) override;
 
+		// command responses
 		ape::CommandResponseWeakPtr getCommandResponse(std::string name) override;
-
 		ape::CommandResponseWeakPtr createCommandResponse(std::string name, bool replicate, std::string ownerID, ape::CommandResponse::RunMode runMode, std::string userName) override;
-
 		void deleteCommandResponse(std::string name) override;
 
 	private:
 		ape::IEventManager* mpEventManager;
 
-		ape::CommandSharedPtrNameMap mCommands;
+		ape::ICoreConfig* mpCoreConfig;
 
-		ape::CommandResponseSharedPtrNameMap mCommandResponses;
+		ape::ISceneNetwork* mpSceneNetwork;
 
 		ape::NodeSharedPtrNameMap mNodes;
 
 		ape::EntitySharedPtrNameMap mEntities;
 
-		ape::ICoreConfig* mpCoreConfig;
+		ape::CommandSharedPtrNameMap mCommands;
 
-		ape::ISceneNetwork* mpSceneNetwork;
+		ape::CommandResponseSharedPtrNameMap mCommandResponses;
 
 		std::string mUniqueID;
 	};
