@@ -51,6 +51,8 @@ namespace ape
 		void ResumeAudio();  // Resume the current playback
 
 		std::string GetCurrentAudioEntityId();
+		bool IsHost();
+		bool loadNextAudioChunk(size_t chunkSize);
 
 		GstElement* getAppSrc();
 		ape::ISceneManager* getSceneManager();
@@ -70,19 +72,23 @@ namespace ape
 		ape::IEventManager* mpEventManager;
 		ape::EventManagerImpl* mpEventManagerImpl;
 		ape::ISceneManager* mpSceneManager;
-		void eventCallBack(const ape::Event& event);
-		ConfigNode mConfig;
-		bool mIsHost;
 
-		GstElement* pipeline_uri;  // URI alapú lejátszáshoz
-        GstElement* pipeline_chunk;  // Chunk alapú lejátszáshoz
-		GstElement* appsrc;
+		void eventCallBack(const ape::Event& event);
 		
 		std::atomic<bool> running;
-		std::thread gstThread;
-
+		bool mIsHost;
 		std::string mCurrentAudioEntityId;
+		ConfigNode mConfig;
 
+		// audio file
+		std::ifstream mAudioFile;
+		std::mutex mAudioFileMutex;
+		size_t mAudioDataSize;
+		size_t mAudioFilePosition;
+
+		GstElement* pipeline_uri;  // URI-based playback
+        GstElement* pipeline_chunk;  // Chunk-based playback
+		GstElement* appsrc; // AppSrc element for chunk-based playback
 		static void OnBusMessage(GstBus* bus, GstMessage* msg, gpointer data);
 		void GStreamerMainLoop();
 	};

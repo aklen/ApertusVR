@@ -35,20 +35,21 @@ static void on_need_data(GstElement* src, guint size, gpointer user_data)
 
     APE_LOG_DEBUG("[GStreamerPlugin]::on_need_data() Check if more data needed...");
     std::string currentAudioEntityId = plugin->GetCurrentAudioEntityId();
-    if (auto audio = std::static_pointer_cast<ape::IAudio>(plugin->getSceneManager()->getEntity(currentAudioEntityId).lock())) {
-        if (audio->loadNextAudioChunk(APE_AUDIO_CHUNK_SIZE_1MB)) {
-            APE_LOG_DEBUG("[GStreamerPlugin]::on_need_data() Loaded next chunk.");
-        } else {
-            APE_LOG_DEBUG("[GStreamerPlugin]::on_need_data() No more chunks, sending EOS.");
-            // g_signal_emit_by_name(plugin->getAppSrc(), "end-of-stream", nullptr);
-            // GstMessage* eos_msg = gst_message_new_eos(GST_OBJECT(src));
-            // gst_element_post_message(src, eos_msg);
 
-            GstBus* bus = gst_element_get_bus(plugin->GetPipelineChunk());
-            GstMessage* eos_msg = gst_message_new_eos(GST_OBJECT(src));
-            gst_bus_post(bus, eos_msg);
-            gst_object_unref(bus);
-        }
+    if (plugin->IsHost()) {
+        APE_LOG_DEBUG("[GStreamerPlugin]::on_need_data() Host GStreamer, requesting more data...");
+        // if (auto audio = std::static_pointer_cast<ape::IAudio>(plugin->getSceneManager()->getEntity(currentAudioEntityId).lock())) {
+            if (plugin->loadNextAudioChunk(APE_AUDIO_CHUNK_SIZE_1MB)) {
+                APE_LOG_DEBUG("[GStreamerPlugin]::on_need_data() Loaded next chunk.");
+            }
+            else {
+                APE_LOG_DEBUG("[GStreamerPlugin]::on_need_data() No more chunks, sending EOS.");
+                GstBus* bus = gst_element_get_bus(plugin->GetPipelineChunk());
+                GstMessage* eos_msg = gst_message_new_eos(GST_OBJECT(src));
+                gst_bus_post(bus, eos_msg);
+                gst_object_unref(bus);
+            }
+        // }
     }
 }
 
@@ -120,14 +121,6 @@ ape::apeGStreamerPlugin::~apeGStreamerPlugin()
     DestroyPipeline(pipeline_uri);
     gst_deinit();
 
-    APE_LOG_DEBUG("[GStreamerPlugin]::Destructor() Checking if GStreamer thread should join...");
-    if (gstThread.joinable()) {
-        APE_LOG_DEBUG("[GStreamerPlugin]::Destructor() Joining playback thread...");
-        gstThread.join();
-        APE_LOG_DEBUG("[GStreamerPlugin]::Destructor() Playback thread joined.");
-    } else {
-        APE_LOG_DEBUG("[GStreamerPlugin]::Destructor() No thread to join.");
-    }
     APE_LOG_DEBUG("[GStreamerPlugin]::Destructor() Playback stopped.");
 	APE_LOG_FUNC_LEAVE();
 }
@@ -177,6 +170,8 @@ void ape::apeGStreamerPlugin::Init()
         return;
     }
 
+    // std::this_thread::sleep_for(std::chrono::seconds(15));
+
     // plugin config
     if (mpConfigManager->loadJson(mpCoreConfig->getConfigFolderPath() + "/" + THIS_PLUGINNAME + ".json", mConfig)) {
         // mConfig.print();
@@ -190,20 +185,77 @@ void ape::apeGStreamerPlugin::Init()
         std::string source = mConfig["audio"].getString("source");
         APE_LOG_DEBUG("[GStreamerPlugin]::Init() Source: " << source);
 
+
+        // open the audio file
+        std::lock_guard<std::mutex> lock(mAudioFileMutex);
+        mAudioFile.open(audioFilePath, std::ios::binary);
+        if (!mAudioFile) {
+            APE_LOG_ERROR("[GStreamerPlugin]::Init() Failed to open file: " << audioFilePath);
+            return;
+        }
+
+        // get the size of the audio file
+        mAudioFile.seekg(0, std::ios::end);
+        mAudioDataSize = mAudioFile.tellg();
+        mAudioFile.seekg(0, std::ios::beg);
+        mAudioFilePosition = 0;
+        APE_LOG_DEBUG("[GStreamerPlugin]::Init() File opened successfully. Size: " << mAudioDataSize);
+
         // create an audio entity
         mCurrentAudioEntityId = "audio_" + audioFileName;
-        if (auto audio = std::static_pointer_cast<ape::IAudio>(mpSceneManager->createEntity(mCurrentAudioEntityId, ape::Entity::AUDIO, true, mpCoreConfig->getNetworkGUID()).lock())) {
-            int channels = audio->getChannels();
-            APE_LOG_DEBUG("[GStreamerPlugin]::Init() Audio channels: " << channels);
+        APE_LOG_DEBUG("[GStreamerPlugin]::Init() Creating audio entity: " << mCurrentAudioEntityId);
 
+        if (auto audio = std::static_pointer_cast<ape::IAudio>(mpSceneManager->createEntity(mCurrentAudioEntityId, ape::Entity::AUDIO, true, mpCoreConfig->getNetworkGUID()).lock())) {
             // load the first chunk of the audio file
-            audio->setFilePath(audioFilePath);
-            bool firstLoaded = audio->loadNextAudioChunk(APE_AUDIO_CHUNK_SIZE_1MB);
+            APE_LOG_DEBUG("[GStreamerPlugin]::Init() Audio Entity created, loading first audio chunk...");
+            bool firstLoaded = loadNextAudioChunk(APE_AUDIO_CHUNK_SIZE_1MB);
             APE_LOG_DEBUG("[GStreamerPlugin]::Init() First chunk loaded: " << firstLoaded);
         }
     }
 
 	APE_LOG_FUNC_LEAVE();
+}
+
+bool ape::apeGStreamerPlugin::loadNextAudioChunk(size_t chunkSize)
+{
+    APE_LOG_DEBUG("[GStreamerPlugin]::loadNextAudioChunk() Loading next audio chunk...");
+    if (!mIsHost) {
+        APE_LOG_DEBUG("[GStreamerPlugin]::loadNextAudioChunk() Not host, skipping.");
+        return false;
+    }
+
+    std::vector<uint8_t> buffer(chunkSize);
+    size_t bytesRead = 0;
+
+    {
+        // std::lock_guard<std::mutex> lock(mAudioFileMutex);
+        APE_LOG_DEBUG("[GStreamerPlugin]::loadNextAudioChunk() Checking file position...");
+
+        if (!mAudioFile.is_open() || mAudioFilePosition >= mAudioDataSize)
+        {
+            APE_LOG_DEBUG("[GStreamerPlugin]::loadNextAudioChunk() End of file reached.");
+            return false;
+        }
+        APE_LOG_DEBUG("[GStreamerPlugin]::loadNextAudioChunk() Reading file...");
+        mAudioFile.seekg(mAudioFilePosition, std::ios::beg);
+        mAudioFile.read(reinterpret_cast<char*>(buffer.data()), chunkSize);
+        bytesRead = mAudioFile.gcount();
+        APE_LOG_DEBUG("[GStreamerPlugin]::loadNextAudioChunk() Bytes read: " << bytesRead);
+        buffer.resize(bytesRead);
+        mAudioFilePosition += bytesRead;
+        APE_LOG_DEBUG("[GStreamerPlugin]::loadNextAudioChunk() New file position: " << mAudioFilePosition);
+    }
+
+    if (bytesRead > 0)
+    {
+        APE_LOG_DEBUG("[GStreamerPlugin]::loadNextAudioChunk() Adding chunk to audio entity...");
+        if (auto audio = std::static_pointer_cast<ape::IAudio>(mpSceneManager->getEntity(mCurrentAudioEntityId).lock())) {
+            audio->appendAudioData(buffer);
+            APE_LOG_DEBUG("[GStreamerPlugin]::loadNextAudioChunk() Chunk added, size: " << buffer.size());
+        }
+    }
+
+    return bytesRead > 0;
 }
 
 void ape::apeGStreamerPlugin::Run()
@@ -512,4 +564,9 @@ void ape::apeGStreamerPlugin::StopAppSrc(GstElement* appsrc)
 std::string ape::apeGStreamerPlugin::GetCurrentAudioEntityId()
 {
     return mCurrentAudioEntityId;
+}
+
+bool ape::apeGStreamerPlugin::IsHost()
+{
+    return mIsHost;
 }

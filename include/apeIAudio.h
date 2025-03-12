@@ -24,40 +24,9 @@ namespace ape
         virtual ~IAudio() {}
 
     public:
-        virtual std::vector<uint8_t> getAudioData() = 0;
-
-        virtual void setAudioData(const std::vector<uint8_t>& data) = 0;
-
-        virtual std::vector<uint8_t> getAllAudioChunks() = 0;
-
-        virtual int getSampleRate() = 0;
-
-        virtual void appendAudioData(const std::vector<uint8_t>& newAudioData) = 0;
-
-        virtual void setFilePath(const std::string& filePath) = 0;
-
-        virtual bool loadNextAudioChunk(size_t chunkSize) = 0;
-
-        virtual void removePlayedChunk() = 0;
-
         virtual std::vector<uint8_t> getLastChunkData() = 0;
-
-        virtual size_t getCurrentStreamPosition() = 0;
-
-        virtual void seekTo(size_t newPosition) = 0;
-
-        virtual void setSampleRate(int sampleRate) = 0;
-
-        virtual int getChannels() = 0;
-
-        virtual void setChannels(int channels) = 0;
-
-        virtual void setStreaming(bool streaming) = 0;
-
-        virtual bool isStreaming() = 0;
-
+        virtual void appendAudioData(const std::vector<uint8_t>& newAudioData) = 0;
         virtual void setOwner(std::string ownerID) = 0;
-
         virtual std::string getOwner() = 0;
     };
 
