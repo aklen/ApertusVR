@@ -59,9 +59,8 @@ ape::apeGStreamerPlugin::apeGStreamerPlugin()
 	APE_LOG_FUNC_ENTER();
     mpCoreConfig = ape::ICoreConfig::getSingletonPtr();
     mpConfigManager = ape::IConfigManager::getSingletonPtr();
-	mpEventManager = ape::IEventManager::getSingletonPtr();
-    mpEventManagerImpl = ((ape::EventManagerImpl*)ape::IEventManager::getSingletonPtr());
-    mpEventManager->connectEvent(ape::Event::Group::AUDIO, std::bind(&apeGStreamerPlugin::eventCallBack, this, std::placeholders::_1));
+	mpEventManagerImpl = ((ape::EventManagerImpl*)ape::IEventManager::getSingletonPtr());
+    mpEventManagerImpl->connectEvent(ape::Event::Group::AUDIO, std::bind(&apeGStreamerPlugin::eventCallBack, this, std::placeholders::_1));
     mpSceneManager = ape::ISceneManager::getSingletonPtr();
     mCurrentAudioEntityId = "";
     mIsHost = mpCoreConfig->getNetworkConfig().participant == SceneNetwork::ParticipantType::HOST;
@@ -170,7 +169,7 @@ void ape::apeGStreamerPlugin::Init()
         return;
     }
 
-    // std::this_thread::sleep_for(std::chrono::seconds(15));
+    std::this_thread::sleep_for(std::chrono::seconds(15));
 
     // plugin config
     if (mpConfigManager->loadJson(mpCoreConfig->getConfigFolderPath() + "/" + THIS_PLUGINNAME + ".json", mConfig)) {

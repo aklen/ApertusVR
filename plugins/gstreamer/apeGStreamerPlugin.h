@@ -69,7 +69,6 @@ namespace ape
 	private:
 		ape::ICoreConfig* mpCoreConfig;
 		ape::IConfigManager* mpConfigManager;
-		ape::IEventManager* mpEventManager;
 		ape::EventManagerImpl* mpEventManagerImpl;
 		ape::ISceneManager* mpSceneManager;
 
