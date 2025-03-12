@@ -92,7 +92,7 @@ ape::SceneNetworkImpl::SceneNetworkImpl()
             std::string lobbyIp = mpCoreConfig->getNetworkConfig().lobbyConfig.ip;
             std::string lobbyPort = mpCoreConfig->getNetworkConfig().lobbyConfig.port;
 
-            if (!lobbyIp.empty() && lobbyIp != "" && !lobbyPort.empty() && lobbyPort != "") {
+            if (!lobbyIp.empty() && !lobbyPort.empty()) {
                 APE_LOG_DEBUG("use lobbyManager to get scene session guid");
                 std::string name = mpCoreConfig->getNetworkConfig().lobbyConfig.roomName;
                 bool getSessionRes = mpLobbyManager->getSessionHostGuid(name, uuid);
