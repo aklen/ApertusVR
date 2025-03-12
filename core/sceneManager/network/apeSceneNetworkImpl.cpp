@@ -477,19 +477,19 @@ void ape::SceneNetworkImpl::listenReplicaPeer()
 							RakNet::Connection_RM3 *connection = mpReplicaManager3->AllocConnection(packet->systemAddress, packet->guid);
 							if (mpReplicaManager3->PushConnection(connection))
 							{
-								APE_LOG_DEBUG("[SceneNetwork] LAN:HOST> Alloc connection to address: " << address << ", guid: " << guid << " was successful");
+								APE_LOG_DEBUG("[SceneNetwork] LAN:HOST> Alloc connection from address: " << address << ", guid: " << guid << " was successful");
 							}
 							else
 							{
 								mpReplicaManager3->DeallocConnection(connection);
-								APE_LOG_ERROR("[SceneNetwork] LAN:HOST> Alloc connection to address: " << address << ", guid: " << guid << " was not successful thus this was deallocated");
+								APE_LOG_ERROR("[SceneNetwork] LAN:HOST> Alloc connection from address: " << address << ", guid: " << guid << " was not successful thus this was deallocated");
 							}
 						}
 					}
 				}
 				break;
 			case ID_DISCONNECTION_NOTIFICATION:
-				APE_LOG_DEBUG("[SceneNetwork] ID_DISCONNECTION_NOTIFICATION");
+				APE_LOG_DEBUG("[SceneNetwork] ID_DISCONNECTION_NOTIFICATION - The system specified in Packet::systemAddress has disconnected from us. For the client, this would mean the server has shutdown.");
 				break;
 			case ID_CONNECTION_REQUEST_ACCEPTED:
 				{
@@ -539,12 +539,12 @@ void ape::SceneNetworkImpl::listenReplicaPeer()
 							RakNet::Connection_RM3 *connection = mpReplicaManager3->AllocConnection(packet->systemAddress, packet->guid);
 							if (mpReplicaManager3->PushConnection(connection))
 							{
-								APE_LOG_DEBUG("[SceneNetwork] LAN:GUEST> Alloc connection to address: " << address << ", guid: " << guid << " was successful");
+								APE_LOG_DEBUG("[SceneNetwork] LAN:GUEST> Alloc connection from address: " << address << ", guid: " << guid << " was successful");
 							}
 							else
 							{
 								mpReplicaManager3->DeallocConnection(connection);
-								APE_LOG_ERROR("[SceneNetwork] LAN:GUEST> Alloc connection to address: " << address << ", guid: " << guid << " was not successful thus this was deallocated");
+								APE_LOG_ERROR("[SceneNetwork] LAN:GUEST> Alloc connection from address: " << address << ", guid: " << guid << " was not successful thus this was deallocated");
 							}
 						}
 					}
@@ -625,6 +625,7 @@ void ape::SceneNetworkImpl::listenReplicaPeer()
 				break;
 			case ID_REPLICA_MANAGER_DOWNLOAD_COMPLETE:
 				{
+					APE_LOG_DEBUG("[SceneNetwork] ID_REPLICA_MANAGER_DOWNLOAD_COMPLETE - Finished downloading all serialized objects.");
 					if (mpReplicaManager3->GetAllConnectionDownloadsCompleted() == true)
 					{
 						APE_LOG_DEBUG("[SceneNetwork] Completed all remote downloads");
