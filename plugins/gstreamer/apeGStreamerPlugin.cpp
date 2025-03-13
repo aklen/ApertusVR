@@ -1,6 +1,27 @@
 #include "apeGStreamerPlugin.h"
 #include "apeUtils.h"
 
+const char* EventGroupToString(ape::Event::Group group) {
+    switch (group) {
+        case ape::Event::Group::AUDIO: return "AUDIO";        
+        default: return "OTHER";
+    }
+}
+
+const char* EventTypeToString(ape::Event::Type type) {
+    switch (type) {
+        case ape::Event::Type::AUDIO_CREATE: return "AUDIO_CREATE";
+        case ape::Event::Type::AUDIO_DELETE: return "AUDIO_DELETE";
+        case ape::Event::Type::AUDIO_PLAYBACK_STATE: return "AUDIO_PLAYBACK_STATE";
+        case ape::Event::Type::AUDIO_DATA: return "AUDIO_DATA";
+        case ape::Event::Type::AUDIO_SAMPLE_RATE: return "AUDIO_SAMPLE_RATE";
+        case ape::Event::Type::AUDIO_CHANNELS: return "AUDIO_CHANNELS";
+        case ape::Event::Type::AUDIO_STREAMING: return "AUDIO_STREAMING";
+        case ape::Event::Type::AUDIO_CHUNK_LOAD: return "AUDIO_CHUNK_LOAD";
+        default: return "OTHER";
+    }
+}
+
 static void on_pad_added(GstElement* src, GstPad* new_pad, gpointer data)
 {
     GstElement* sink = GST_ELEMENT(data);
@@ -126,37 +147,15 @@ ape::apeGStreamerPlugin::~apeGStreamerPlugin()
 
 void ape::apeGStreamerPlugin::eventCallBack(const ape::Event& event)
 {
-    APE_LOG_DEBUG("[GStreamerPlugin]::eventCallBack() Received event: " << event.subjectName);
+    APE_LOG_DEBUG("[GStreamerPlugin]::eventCallBack() Received event>"
+                  << " group: " << EventGroupToString(event.group)
+                  << " type: " << EventTypeToString(event.type)
+                  << " subject: " << event.subjectName);
 
-    if (event.type == ape::Event::Type::AUDIO_CREATE) {
-        APE_LOG_DEBUG("[GStreamerPlugin]::eventCallBack() Audio entity created: " << event.subjectName);
-    }
-    else if (event.type == ape::Event::Type::AUDIO_DELETE) {
-        APE_LOG_DEBUG("[GStreamerPlugin]::eventCallBack() Audio entity deleted: " << event.subjectName);
-    }
-    else if (event.type == ape::Event::Type::AUDIO_PLAYBACK_STATE) {
-        APE_LOG_DEBUG("[GStreamerPlugin]::eventCallBack() Audio playback state changed: " << event.subjectName);
-    }
-    else if (event.type == ape::Event::Type::AUDIO_DATA) {
-        APE_LOG_DEBUG("[GStreamerPlugin]::eventCallBack() Audio data changed: " << event.subjectName);
-    }
-    else if (event.type == ape::Event::Type::AUDIO_SAMPLE_RATE) {
-        APE_LOG_DEBUG("[GStreamerPlugin]::eventCallBack() Audio sample rate changed: " << event.subjectName);
-    }
-    else if (event.type == ape::Event::Type::AUDIO_CHANNELS) {
-        APE_LOG_DEBUG("[GStreamerPlugin]::eventCallBack() Audio channels changed: " << event.subjectName);
-    }
-    else if (event.type == ape::Event::Type::AUDIO_STREAMING) {
-        APE_LOG_DEBUG("[GStreamerPlugin]::eventCallBack() Audio streaming changed: " << event.subjectName);
-    }
-    else if (event.type == ape::Event::Type::AUDIO_CHUNK_LOAD) {
-        APE_LOG_DEBUG("[GStreamerPlugin]::eventCallBack() Audio chunk position changed: " << event.subjectName);
+    if (event.type == ape::Event::Type::AUDIO_CHUNK_LOAD) {
         if (auto audio = std::static_pointer_cast<ape::IAudio>(mpSceneManager->getEntity(event.subjectName).lock())) {
             PlayAudioChunk(audio->getLastChunkData());
         }
-    }
-    else {
-        APE_LOG_DEBUG("[GStreamerPlugin]::eventCallBack() Unknown event type: " << event.subjectName);
     }
 }
 
@@ -170,6 +169,12 @@ void ape::apeGStreamerPlugin::Init()
     }
 
     std::this_thread::sleep_for(std::chrono::seconds(15));
+
+
+    APE_LOG_DEBUG("[GStreamerPlugin]::Init() Creating test node...");
+    if (auto testNode = std::static_pointer_cast<ape::INode>(mpSceneManager->createNode("test-node", true, mpCoreConfig->getNetworkGUID()).lock())) {
+        APE_LOG_DEBUG("[GStreamerPlugin]::Init() Test node created.");
+    }
 
     // plugin config
     if (mpConfigManager->loadJson(mpCoreConfig->getConfigFolderPath() + "/" + THIS_PLUGINNAME + ".json", mConfig)) {
