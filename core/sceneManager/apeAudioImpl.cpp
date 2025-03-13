@@ -65,6 +65,11 @@ RakNet::RM3SerializationResult ape::AudioImpl::Serialize(RakNet::SerializeParame
 
     APE_LOG_DEBUG("AudioImpl::Serialize() called");
 
+    // Force RakNet to always send the full data
+    serializeParameters->whenLastSerialized = 0;
+    APE_LOG_DEBUG("AudioImpl::Serialize() whenLastSerialized: " << serializeParameters->whenLastSerialized);
+
+    // Reset the output bitstream before writing
     serializeParameters->outputBitstream[0].Reset();
     APE_LOG_DEBUG("AudioImpl::Serialize() Bitstream reset done.");
 
