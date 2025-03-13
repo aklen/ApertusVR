@@ -162,6 +162,13 @@ void ape::apeGStreamerPlugin::eventCallBack(const ape::Event& event)
             PlayAudioChunk(audio->getLastChunkData());
         }
     }
+    else if (event.type == ape::Event::Type::AUDIO_END_OF_STREAM) {
+        APE_LOG_DEBUG("[GStreamerPlugin]::eventCallBack() Received event> EOS.");
+        GstBus* bus = gst_element_get_bus(GetPipelineChunk());
+        GstMessage* eos_msg = gst_message_new_eos(GST_OBJECT(appsrc));
+        gst_bus_post(bus, eos_msg);
+        gst_object_unref(bus);
+    }
 }
 
 void ape::apeGStreamerPlugin::Init()
