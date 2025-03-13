@@ -239,7 +239,6 @@ void ape::apeGStreamerPlugin::Init()
         std::string source = mConfig["audio"].getString("source");
         APE_LOG_DEBUG("[GStreamerPlugin]::Init() Source: " << source);
 
-
         // open the audio file
         std::lock_guard<std::mutex> lock(mAudioFileMutex);
         mAudioFile.open(audioFilePath, std::ios::binary);
@@ -258,8 +257,7 @@ void ape::apeGStreamerPlugin::Init()
         // create an audio sync entity
         mCurrentAudioSyncEntityId = "audiosync_" + audioFileName;
         APE_LOG_DEBUG("[GStreamerPlugin]::Init() Creating AudioSync entity: " << mCurrentAudioSyncEntityId);
-        if (auto audioSync = std::static_pointer_cast<ape::IAudioSync>(
-                mpSceneManager->createEntity(mCurrentAudioSyncEntityId, ape::Entity::AUDIO_SYNC, true, mpCoreConfig->getNetworkGUID()).lock()))
+        if (auto audioSync = std::static_pointer_cast<ape::IAudioSync>(mpSceneManager->createEntity(mCurrentAudioSyncEntityId, ape::Entity::AUDIO_SYNC, true, mpCoreConfig->getNetworkGUID()).lock()))
         {
             APE_LOG_DEBUG("[GStreamerPlugin]::Init() AudioSync entity created.");
         }
