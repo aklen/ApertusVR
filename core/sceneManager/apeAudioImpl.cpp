@@ -1,4 +1,10 @@
 #include "apeAudioImpl.h"
+#include <zlib.h> // CRC32
+
+uint32_t calculateCRC32(const std::vector<uint8_t>& data)
+{
+    return crc32(0L, data.data(), data.size());
+}
 
 ape::AudioImpl::AudioImpl(std::string name, bool replicate, std::string ownerID, bool isHost)
     : ape::IAudio(name, replicate, ownerID), ape::Replica("Audio", name, ownerID, isHost)
@@ -79,6 +85,10 @@ RakNet::RM3SerializationResult ape::AudioImpl::Serialize(RakNet::SerializeParame
         {
             mVariableDeltaSerializer.SerializeVariable(&serializationContext, byte);
         }
+
+        // calculate the CRC32 hash of the chunk
+        uint32_t chunkHash = calculateCRC32(chunk);
+        APE_LOG_DEBUG("AudioImpl::Serialize() chunk size: " << chunkSize << ", CRC32: " << chunkHash);
     }
 
     // save the maximum number of chunks
@@ -121,6 +131,10 @@ void ape::AudioImpl::Deserialize(RakNet::DeserializeParameters* deserializeParam
                 {
                     mVariableDeltaSerializer.DeserializeVariable(&deserializationContext, chunk[j]);
                 }
+
+                uint32_t chunkHash = calculateCRC32(chunk);
+                APE_LOG_DEBUG("AudioImpl::Deserialize() chunk size: " << chunk.size() << ", CRC32: " << chunkHash);
+
                 mAudioChunks.push_back(chunk);
             }
         }

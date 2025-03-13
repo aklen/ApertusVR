@@ -133,6 +133,10 @@ if (NOT TARGET MY_ZIP)
 	find_package(MY_ZIP REQUIRED)
 endif()
 
+if (NOT TARGET ZLIB)
+  find_package(ZLIB REQUIRED)
+endif()
+
 # Link with dependency libraries and add preprocessor definitions with lists
 set(APE_LINK_LIBS_SCENEMANAGER
 	apeCoreConfig
@@ -140,6 +144,7 @@ set(APE_LINK_LIBS_SCENEMANAGER
 	apeLogManager
 	RAKNET
 	MY_ZIP
+	ZLIB::ZLIB
 	)
 
 set(APE_PREPROC_DEF_SCENEMANAGER
