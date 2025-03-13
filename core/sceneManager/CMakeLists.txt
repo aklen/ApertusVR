@@ -28,6 +28,7 @@ include("network/prepare_zip.cmake")
 
 set(HEADERS
 	apeAudioImpl.h
+	apeAudioSyncImpl.h
 	apeTextGeometryImpl.h
 	apeLightImpl.h
 	apeBrowserImpl.h
@@ -67,6 +68,7 @@ set(HEADERS
 
 set(SOURCES
 	apeAudioImpl.cpp
+	apeAudioSyncImpl.cpp
 	apeTextGeometryImpl.cpp
 	apeLightImpl.cpp
 	apeBrowserImpl.cpp

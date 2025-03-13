@@ -19,6 +19,7 @@
 #include "apeIConfigManager.h"
 #include "apeICoreConfig.h"
 #include "apeIAudio.h"
+#include "apeIAudioSync.h"
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
 #include <gobject/gsignal.h>
@@ -78,6 +79,7 @@ namespace ape
 		std::atomic<bool> running;
 		bool mIsHost;
 		std::string mCurrentAudioEntityId;
+		std::string mCurrentAudioSyncEntityId;
 		ConfigNode mConfig;
 
 		// audio file
@@ -85,12 +87,18 @@ namespace ape
 		std::mutex mAudioFileMutex;
 		size_t mAudioDataSize;
 		size_t mAudioFilePosition;
+		ape::AudioSyncSharedPtr mAudioSync;
 
 		GstElement* pipeline_uri;  // URI-based playback
         GstElement* pipeline_chunk;  // Chunk-based playback
 		GstElement* appsrc; // AppSrc element for chunk-based playback
 		static void OnBusMessage(GstBus* bus, GstMessage* msg, gpointer data);
 		void GStreamerMainLoop();
+
+		// GStreamer time synchronization
+		std::chrono::milliseconds getCurrentGStreamerPlaybackTime();
+		void adjustGStreamerPlayback(std::chrono::milliseconds receivedTime);
+		void seekGStreamerPlayback(std::chrono::milliseconds receivedTime);
 	};
 
 	APE_PLUGIN_FUNC ape::IPlugin* CreateapeGStreamerPlugin()

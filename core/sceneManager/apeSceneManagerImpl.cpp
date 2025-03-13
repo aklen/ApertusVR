@@ -25,6 +25,7 @@ SOFTWARE.*/
 #include "apeEventManagerImpl.h"
 
 #include "apeAudioImpl.h"
+#include "apeAudioSyncImpl.h"
 #include "apeNodeImpl.h"
 #include "apeLightImpl.h"
 #include "apeTextGeometryImpl.h"
@@ -156,6 +157,19 @@ ape::EntityWeakPtr ape::SceneManagerImpl::createEntity(std::string name, ape::En
 			auto entity = std::make_shared<ape::AudioImpl>(name, replicate, ownerID, ((ape::SceneNetworkImpl*)mpSceneNetwork)->isReplicaHost());
 			mEntities.insert(std::make_pair(name, entity));
 			((ape::EventManagerImpl*)mpEventManager)->fireEvent(ape::Event(name, ape::Event::Type::AUDIO_CREATE));
+			if (replicate)
+			{
+				if (auto replicaManager = ((ape::SceneNetworkImpl*)mpSceneNetwork)->getReplicaManager().lock())
+					replicaManager->Reference(entity.get());
+			}
+			return entity;
+		}
+		case ape::Entity::AUDIO_SYNC:
+		{
+			APE_LOG_TRACE("type: AUDIO_SYNC");
+			auto entity = std::make_shared<ape::AudioSyncImpl>(name, replicate, ownerID, ((ape::SceneNetworkImpl*)mpSceneNetwork)->isReplicaHost());
+			mEntities.insert(std::make_pair(name, entity));
+			((ape::EventManagerImpl*)mpEventManager)->fireEvent(ape::Event(name, ape::Event::Type::AUDIO_SYNC_CREATE));
 			if (replicate)
 			{
 				if (auto replicaManager = ((ape::SceneNetworkImpl*)mpSceneNetwork)->getReplicaManager().lock())

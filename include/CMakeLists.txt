@@ -34,6 +34,7 @@ set (HEADERS
 		apeGeometry.h
 		apeHeadTrackingConfigs.h
 		apeIAudio.h
+		apeIAudioSync.h
 		apeIBoxGeometry.h
 		apeIBrowser.h
 		apeICamera.h

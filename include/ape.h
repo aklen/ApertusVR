@@ -36,6 +36,12 @@ namespace ape
 
 	typedef std::weak_ptr<IAudio> AudioWeakPtr;
 
+	class IAudioSync;
+
+	typedef std::shared_ptr<IAudioSync> AudioSyncSharedPtr;
+
+	typedef std::weak_ptr<IAudioSync> AudioSyncWeakPtr;
+
 	class INode;
 
 	typedef std::shared_ptr<INode> NodeSharedPtr;

@@ -124,6 +124,7 @@ ape::apeGStreamerPlugin::apeGStreamerPlugin()
     mpEventManagerImpl->connectEvent(ape::Event::Group::AUDIO, std::bind(&apeGStreamerPlugin::eventCallBack, this, std::placeholders::_1));
     mpSceneManager = ape::ISceneManager::getSingletonPtr();
     mCurrentAudioEntityId = "";
+    mCurrentAudioSyncEntityId = "";
     mIsHost = mpCoreConfig->getNetworkConfig().participant == SceneNetwork::ParticipantType::HOST;
 
     // GStreamer initialization
@@ -217,12 +218,6 @@ void ape::apeGStreamerPlugin::Init()
 
     std::this_thread::sleep_for(std::chrono::seconds(15));
 
-
-    APE_LOG_DEBUG("[GStreamerPlugin]::Init() Creating test node...");
-    if (auto testNode = std::static_pointer_cast<ape::INode>(mpSceneManager->createNode("test-node", true, mpCoreConfig->getNetworkGUID()).lock())) {
-        APE_LOG_DEBUG("[GStreamerPlugin]::Init() Test node created.");
-    }
-
     // plugin config
     if (mpConfigManager->loadJson(mpCoreConfig->getConfigFolderPath() + "/" + THIS_PLUGINNAME + ".json", mConfig)) {
         // mConfig.print();
@@ -252,15 +247,31 @@ void ape::apeGStreamerPlugin::Init()
         mAudioFilePosition = 0;
         APE_LOG_DEBUG("[GStreamerPlugin]::Init() File opened successfully. Size: " << mAudioDataSize);
 
+
         // create an audio entity
         mCurrentAudioEntityId = "audio_" + audioFileName;
         APE_LOG_DEBUG("[GStreamerPlugin]::Init() Creating audio entity: " << mCurrentAudioEntityId);
-
         if (auto audio = std::static_pointer_cast<ape::IAudio>(mpSceneManager->createEntity(mCurrentAudioEntityId, ape::Entity::AUDIO, true, mpCoreConfig->getNetworkGUID()).lock())) {
             // load the first chunk of the audio file
             APE_LOG_DEBUG("[GStreamerPlugin]::Init() Audio Entity created, loading first audio chunk...");
             bool firstLoaded = loadNextAudioChunk(APE_AUDIO_CHUNK_SIZE_1MB);
             APE_LOG_DEBUG("[GStreamerPlugin]::Init() First chunk loaded: " << firstLoaded);
+        }
+        else {
+            APE_LOG_ERROR("[GStreamerPlugin]::Init() Failed to create Audio entity!");
+        }
+
+        // create an audio sync entity
+        mCurrentAudioSyncEntityId = "audiosync_" + audioFileName;
+        APE_LOG_DEBUG("[GStreamerPlugin]::Init() Creating AudioSync entity: " << mCurrentAudioSyncEntityId);
+        if (auto audioSync = std::static_pointer_cast<ape::IAudioSync>(
+                mpSceneManager->createEntity(mCurrentAudioSyncEntityId, ape::Entity::AUDIO_SYNC, true, mpCoreConfig->getNetworkGUID()).lock()))
+        {
+            APE_LOG_DEBUG("[GStreamerPlugin]::Init() AudioSync entity created.");
+            mAudioSync = audioSync;
+        }
+        else {
+            APE_LOG_ERROR("[GStreamerPlugin]::Init() Failed to create AudioSync entity!");
         }
     }
 
@@ -313,7 +324,24 @@ void ape::apeGStreamerPlugin::Run()
 	APE_LOG_FUNC_ENTER();
 	while (true)
 	{
-		std::this_thread::sleep_for(std::chrono::milliseconds(20));
+		std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+        // Host sends playback time to clients
+        if (mIsHost && mAudioSync)
+        {
+            std::chrono::milliseconds playbackTime = getCurrentGStreamerPlaybackTime();
+            mAudioSync->setPlaybackTime(playbackTime);
+            APE_LOG_DEBUG("[GStreamerPlugin]::Run() Updated AudioSync timestamp: " << playbackTime.count() << " ms");
+        }
+
+        // Clients adjust playback to host's timestamp
+        if (!mIsHost && mAudioSync)
+        {
+            std::chrono::milliseconds receivedTime = mAudioSync->getPlaybackTime();
+            APE_LOG_DEBUG("[GStreamerPlugin]::Run() Adjusting playback to received timestamp: " 
+                          << receivedTime.count() << " ms");
+            adjustGStreamerPlayback(receivedTime);
+        }
 	}
 	APE_LOG_FUNC_LEAVE();
 }
@@ -624,4 +652,51 @@ std::string ape::apeGStreamerPlugin::GetCurrentAudioEntityId()
 bool ape::apeGStreamerPlugin::IsHost()
 {
     return mIsHost;
+}
+
+std::chrono::milliseconds ape::apeGStreamerPlugin::getCurrentGStreamerPlaybackTime()
+{
+    gint64 position = GST_CLOCK_TIME_NONE;
+    if (pipeline_chunk) {
+        gst_element_query_position(pipeline_chunk, GST_FORMAT_TIME, &position);
+    }
+    return std::chrono::milliseconds(GST_TIME_AS_MSECONDS(position));
+}
+
+void ape::apeGStreamerPlugin::seekGStreamerPlayback(std::chrono::milliseconds receivedTime)
+{
+    gst_element_seek_simple(pipeline_chunk, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH, receivedTime.count() * GST_MSECOND);
+    APE_LOG_DEBUG("[GStreamerPlugin]::seekGStreamerPlayback() Seeking to: " << receivedTime.count() << " ms");
+}
+
+void ape::apeGStreamerPlugin::adjustGStreamerPlayback(std::chrono::milliseconds receivedTime)
+{
+    gint64 position = GST_CLOCK_TIME_NONE;
+    gst_element_query_position(pipeline_chunk, GST_FORMAT_TIME, &position);
+
+    std::chrono::milliseconds currentTime(GST_TIME_AS_MSECONDS(position));
+    std::chrono::milliseconds diff = receivedTime - currentTime;
+
+    APE_LOG_DEBUG("[GStreamerPlugin]::adjustGStreamerPlayback() Current Time: " << currentTime.count() 
+                  << " ms, Received Time: " << receivedTime.count() 
+                  << " ms, Diff: " << diff.count() << " ms");
+
+    if (std::abs(diff.count()) > 500) // if the difference is more than 500ms, seek to the received time
+    {
+        seekGStreamerPlayback(receivedTime);
+    }
+    else // if the difference is less than 500ms, adjust the playback speed
+    {
+        double rate = 1.0;
+        if (diff.count() > 100) // if we're ahead, speed up
+            rate = 1.05;
+        else if (diff.count() < -100) // if we're behind, slow down
+            rate = 0.95;
+
+        gst_element_seek(pipeline_chunk, rate, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH,
+                         GST_SEEK_TYPE_SET, currentTime.count() * GST_MSECOND,
+                         GST_SEEK_TYPE_NONE, GST_CLOCK_TIME_NONE);
+
+        APE_LOG_DEBUG("[GStreamerPlugin]::adjustGStreamerPlayback() Adjusted playback speed to: " << rate);
+    }
 }

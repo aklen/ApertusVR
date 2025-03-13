@@ -61,6 +61,7 @@ namespace ape
 			POINT_CLOUD,
 			RIGIDBODY,
 			AUDIO,
+			AUDIO_SYNC,
 
 			INVALID,
 		};
