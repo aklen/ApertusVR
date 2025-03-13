@@ -121,7 +121,7 @@ void ape::AudioImpl::Deserialize(RakNet::DeserializeParameters* deserializeParam
     {
         if (audioChunkCount > 0)  // only clear the chunks if we have some to load
         {
-            APE_LOG_DEBUG("AudioImpl::Deserialize() clearing audio chunks");
+            APE_LOG_DEBUG("AudioImpl::Deserialize() clearing audio chunks (before: " << mAudioChunks.size() << ")");
             mAudioChunks.clear();
         }
         else {
@@ -131,19 +131,26 @@ void ape::AudioImpl::Deserialize(RakNet::DeserializeParameters* deserializeParam
         for (size_t i = 0; i < audioChunkCount; i++)
         {
             size_t chunkSize = 0;
-            if (mVariableDeltaSerializer.DeserializeVariable(&deserializationContext, chunkSize))
+            if (!mVariableDeltaSerializer.DeserializeVariable(&deserializationContext, chunkSize))
             {
-                std::vector<uint8_t> chunk(chunkSize);
-                for (size_t j = 0; j < chunkSize; j++)
-                {
-                    mVariableDeltaSerializer.DeserializeVariable(&deserializationContext, chunk[j]);
-                }
-
-                uint32_t chunkHash = calculateCRC32(chunk);
-                APE_LOG_DEBUG("AudioImpl::Deserialize() chunk size: " << chunk.size() << ", CRC32: " << chunkHash);
-
-                mAudioChunks.push_back(chunk);
+                APE_LOG_ERROR("AudioImpl::Deserialize() ERROR: Failed to deserialize chunk size!");
+                return;
             }
+         
+            std::vector<uint8_t> chunk(chunkSize);
+            for (size_t j = 0; j < chunkSize; j++)
+            {
+                if (!mVariableDeltaSerializer.DeserializeVariable(&deserializationContext, chunk[j]))
+                {
+                    APE_LOG_ERROR("AudioImpl::Deserialize() ERROR: Failed to deserialize chunk data at index " << j);
+                    return;
+                }
+            }
+
+            uint32_t chunkHash = calculateCRC32(chunk);
+            APE_LOG_DEBUG("AudioImpl::Deserialize() chunk size: " << chunk.size() << ", CRC32: " << chunkHash);
+
+            mAudioChunks.push_back(chunk);
         }
         mpEventManagerImpl->fireEvent(ape::Event(mName, ape::Event::Type::AUDIO_CHUNK_LOAD));
     }
