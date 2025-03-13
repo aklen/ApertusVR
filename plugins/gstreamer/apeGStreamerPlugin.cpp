@@ -3,7 +3,8 @@
 
 const char* EventGroupToString(ape::Event::Group group) {
     switch (group) {
-        case ape::Event::Group::AUDIO: return "AUDIO";        
+        case ape::Event::Group::AUDIO: return "AUDIO";
+        case ape::Event::Group::AUDIO_SYNC: return "AUDIO_SYNC";
         default: return "OTHER";
     }
 }
@@ -49,6 +50,15 @@ const std::string EventTypeToString(ape::Event::Type type) {
             break;
         case ape::Event::Type::AUDIO_STREAMING:
             result = "AUDIO_STREAMING";
+            break;
+        case ape::Event::Type::AUDIO_END_OF_STREAM:
+            result = "AUDIO_END_OF_STREAM";
+            break;
+        case ape::Event::Type::AUDIO_SYNC_CREATE:
+            result = "AUDIO_SYNC_CREATE";
+            break;
+        case ape::Event::Type::AUDIO_SYNC_PLAYBACK_TIME:
+            result = "AUDIO_SYNC_PLAYBACK_TIME";
             break;
         default:
             result = "OTHER (" + std::to_string(type) + ")";
@@ -122,6 +132,7 @@ ape::apeGStreamerPlugin::apeGStreamerPlugin()
     mpConfigManager = ape::IConfigManager::getSingletonPtr();
 	mpEventManagerImpl = ((ape::EventManagerImpl*)ape::IEventManager::getSingletonPtr());
     mpEventManagerImpl->connectEvent(ape::Event::Group::AUDIO, std::bind(&apeGStreamerPlugin::eventCallBack, this, std::placeholders::_1));
+    mpEventManagerImpl->connectEvent(ape::Event::Group::AUDIO_SYNC, std::bind(&apeGStreamerPlugin::eventCallBack, this, std::placeholders::_1));
     mpSceneManager = ape::ISceneManager::getSingletonPtr();
     mCurrentAudioEntityId = "";
     mCurrentAudioSyncEntityId = "";
