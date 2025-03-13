@@ -95,6 +95,11 @@ static void on_need_data(GstElement* src, guint size, gpointer user_data)
         return;
     }
 
+    if (!plugin->GetPipelineChunk()) {
+        APE_LOG_DEBUG("[GStreamerPlugin]::on_need_data() Pipeline not initialized!");
+        return;
+    }
+
     GstState state;
     gst_element_get_state(plugin->GetPipelineChunk(), &state, nullptr, GST_CLOCK_TIME_NONE);
     if (state != GST_STATE_PLAYING) {
@@ -346,6 +351,11 @@ void ape::apeGStreamerPlugin::Run()
 
         bool isHostSyncActive = mIsHost && mAudioSync;
         bool isGuestSyncActive = !mIsHost && mAudioSync;
+
+        if (!pipeline_chunk) {
+            APE_LOG_DEBUG("[GStreamerPlugin]::Run() Pipeline-chunk not initialized!");
+            continue;
+        }
 
         GstState state;
         gst_element_get_state(pipeline_chunk, &state, nullptr, GST_CLOCK_TIME_NONE);
