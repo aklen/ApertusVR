@@ -59,10 +59,10 @@ static void on_need_data(GstElement* src, guint size, gpointer user_data)
         return;
     }
 
-    APE_LOG_DEBUG("[GStreamerPlugin]::on_need_data() Check if more data needed...");
-    std::string currentAudioEntityId = plugin->GetCurrentAudioEntityId();
-
     if (plugin->IsHost()) {
+        // APE_LOG_DEBUG("[GStreamerPlugin]::on_need_data() Check if more data needed...");
+        // std::string currentAudioEntityId = plugin->GetCurrentAudioEntityId();
+
         APE_LOG_DEBUG("[GStreamerPlugin]::on_need_data() Host GStreamer, requesting more data...");
         // if (auto audio = std::static_pointer_cast<ape::IAudio>(plugin->getSceneManager()->getEntity(currentAudioEntityId).lock())) {
             if (plugin->loadNextAudioChunk(APE_AUDIO_CHUNK_SIZE_1MB)) {
