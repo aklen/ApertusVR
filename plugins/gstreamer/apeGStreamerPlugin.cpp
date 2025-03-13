@@ -90,7 +90,10 @@ static void on_pad_added(GstElement* src, GstPad* new_pad, gpointer data)
 static void on_need_data(GstElement* src, guint size, gpointer user_data)
 {
     ape::apeGStreamerPlugin* plugin = static_cast<ape::apeGStreamerPlugin*>(user_data);
-    if (!plugin) return;
+    if (!plugin) {
+        APE_LOG_DEBUG("[GStreamerPlugin]::on_need_data() Plugin is null!");
+        return;
+    }
 
     GstState state;
     gst_element_get_state(plugin->GetPipelineChunk(), &state, nullptr, GST_CLOCK_TIME_NONE);
