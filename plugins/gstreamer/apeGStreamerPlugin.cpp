@@ -224,7 +224,7 @@ void ape::apeGStreamerPlugin::Init()
         return;
     }
 
-    std::this_thread::sleep_for(std::chrono::seconds(15));
+    std::this_thread::sleep_for(std::chrono::seconds(10));
 
     // plugin config
     if (mpConfigManager->loadJson(mpCoreConfig->getConfigFolderPath() + "/" + THIS_PLUGINNAME + ".json", mConfig)) {
