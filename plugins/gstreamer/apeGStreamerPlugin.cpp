@@ -398,15 +398,15 @@ void ape::apeGStreamerPlugin::PlayAudioChunk(const std::vector<uint8_t>& audioDa
         GstState state;
         gst_element_get_state(pipeline_chunk, &state, nullptr, GST_CLOCK_TIME_NONE);
         if (state != GST_STATE_PLAYING) {
-            APE_LOG_DEBUG("[GStreamerPlugin]::Play() Changing state to PLAYING...");
+            APE_LOG_DEBUG("[GStreamerPlugin]::PlayAudioChunk() Changing state to PLAYING...");
             gst_element_set_state(pipeline_chunk, GST_STATE_PLAYING);
             running = true;
 
             mpEventManagerImpl->fireEvent(ape::Event("PlaybackStarted", ape::Event::Type::AUDIO_PLAYBACK_STATE));
-            APE_LOG_DEBUG("[GStreamerPlugin]::Play() Playback started.");
+            APE_LOG_DEBUG("[GStreamerPlugin]::PlayAudioChunk() Playback started.");
         }
         else {
-            APE_LOG_DEBUG("[GStreamerPlugin]::Play() Pipeline already playing.");
+            APE_LOG_DEBUG("[GStreamerPlugin]::PlayAudioChunk() Nothing to do, pipeline already playing.");
         }
     // }).detach();
 }
