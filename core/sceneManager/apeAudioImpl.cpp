@@ -119,7 +119,14 @@ void ape::AudioImpl::Deserialize(RakNet::DeserializeParameters* deserializeParam
     size_t audioChunkCount = 0;
     if (mVariableDeltaSerializer.DeserializeVariable(&deserializationContext, audioChunkCount))
     {
-        mAudioChunks.clear();
+        if (audioChunkCount > 0)  // only clear the chunks if we have some to load
+        {
+            APE_LOG_DEBUG("AudioImpl::Deserialize() clearing audio chunks");
+            mAudioChunks.clear();
+        }
+        else {
+            APE_LOG_WARNING("AudioImpl::Deserialize() no audio chunks to load");
+        }
 
         for (size_t i = 0; i < audioChunkCount; i++)
         {
@@ -151,10 +158,11 @@ void ape::AudioImpl::Deserialize(RakNet::DeserializeParameters* deserializeParam
     }
 
     // load the current playing chunk index
-    size_t oldPlayingChunkIndex = mPlayingChunkIndex;
-    if (mVariableDeltaSerializer.DeserializeVariable(&deserializationContext, mPlayingChunkIndex))
+    size_t newPlayingChunkIndex = 0;
+    if (mVariableDeltaSerializer.DeserializeVariable(&deserializationContext, newPlayingChunkIndex))
     {
-        if (oldPlayingChunkIndex != mPlayingChunkIndex) {
+        if (newPlayingChunkIndex != mPlayingChunkIndex) {
+            mPlayingChunkIndex = newPlayingChunkIndex;
             mpEventManagerImpl->fireEvent(ape::Event(mName, ape::Event::Type::AUDIO_CHUNK_INDEX));
         }
     }
