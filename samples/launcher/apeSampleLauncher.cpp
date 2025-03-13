@@ -30,6 +30,14 @@ SOFTWARE.*/
 #include <cstring>
 
 std::atomic<bool> shouldStop = false;
+std::atomic<bool> forceKill = false;
+
+void forceKillProcess()
+{
+    std::cerr << "forceKillProcess() Process is not responding, forcefully terminating..." << std::endl;
+    std::this_thread::sleep_for(std::chrono::seconds(1)); // small delay to let the message print
+    std::_Exit(EXIT_FAILURE); // garanteed to terminate the process
+}
 
 void stopHandlerBlocking(int s)
 {
@@ -41,8 +49,18 @@ void stopHandlerBlocking(int s)
 void stopHandlerNonBlocking(int s)
 {
 	std::cout << "stopHandlerNonBlocking() Caught signal " << s << ", quitting..." << std::endl;
-	ape::System::Stop();
 	shouldStop = true;
+
+	// start a watchdog thread to force kill the process if it doesn't stop in time
+    std::thread watchdog([]() {
+        std::this_thread::sleep_for(std::chrono::seconds(5));
+        if (!forceKill) // if the main thread is still running
+        {
+            forceKillProcess();
+        }
+    });
+
+    watchdog.detach(); // detach the watchdog thread
 }
 
 void blockingMode(const char* configFilePath)
@@ -55,11 +73,16 @@ void blockingMode(const char* configFilePath)
 
 void nonBlockingMode(const char* configFilePath)
 {
-	std::cout << "Starting in non-blocking mode" << std::endl;
-	signal(SIGINT, stopHandlerNonBlocking);
-	ape::System::Start(configFilePath, false);
-	while (!shouldStop)
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::cout << "Starting in non-blocking mode" << std::endl;
+    signal(SIGINT, stopHandlerNonBlocking);
+    ape::System::Start(configFilePath, false);
+    while (!shouldStop)
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    // try to stop the system
+    ape::System::Stop();
+    
+    forceKill = true; // if the main thread is still running, force kill it
 }
 
 int main(int argc, char** argv)
