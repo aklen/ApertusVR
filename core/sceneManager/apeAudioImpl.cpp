@@ -125,6 +125,9 @@ void ape::AudioImpl::Deserialize(RakNet::DeserializeParameters* deserializeParam
     size_t audioChunkCount = 0;
     if (mVariableDeltaSerializer.DeserializeVariable(&deserializationContext, audioChunkCount))
     {
+        APE_LOG_DEBUG("AudioImpl::Deserialize() chunk count: " << audioChunkCount 
+                   << " | Bitstream read offset: " << deserializeParameters->serializationBitstream[0].GetReadOffset());
+
         if (audioChunkCount > 0)  // only clear the chunks if we have some to load
         {
             APE_LOG_DEBUG("AudioImpl::Deserialize() clearing audio chunks (before: " << mAudioChunks.size() << ")");
@@ -137,10 +140,22 @@ void ape::AudioImpl::Deserialize(RakNet::DeserializeParameters* deserializeParam
         for (size_t i = 0; i < audioChunkCount; i++)
         {
             size_t chunkSize = 0;
-            if (!mVariableDeltaSerializer.DeserializeVariable(&deserializationContext, chunkSize))
+
+            // Debugging before deserialization
+            APE_LOG_DEBUG("AudioImpl::Deserialize() Before chunk size read | Bitstream read offset: "
+                        << deserializeParameters->serializationBitstream[0].GetReadOffset()
+                        << " | Total bytes: " << deserializeParameters->serializationBitstream[0].GetNumberOfBytesUsed());
+
+            if (mVariableDeltaSerializer.DeserializeVariable(&deserializationContext, chunkSize))
             {
-                APE_LOG_ERROR("AudioImpl::Deserialize() ERROR: Failed to deserialize chunk size!");
-                return;
+                APE_LOG_DEBUG("AudioImpl::Deserialize() Chunk[" << i << "] Size: " << chunkSize);
+            }
+            else
+            {
+                APE_LOG_ERROR("AudioImpl::Deserialize() ERROR: Failed to deserialize chunk size! "
+                            << "Bitstream read offset: " << deserializeParameters->serializationBitstream[0].GetReadOffset()
+                            << " | Total bytes: " << deserializeParameters->serializationBitstream[0].GetNumberOfBytesUsed());
+                return; // Stop deserialization if this fails
             }
          
             std::vector<uint8_t> chunk(chunkSize);
@@ -159,6 +174,12 @@ void ape::AudioImpl::Deserialize(RakNet::DeserializeParameters* deserializeParam
             mAudioChunks.push_back(chunk);
         }
         mpEventManagerImpl->fireEvent(ape::Event(mName, ape::Event::Type::AUDIO_CHUNK_LOAD));
+    }
+    else
+    {
+        APE_LOG_ERROR("AudioImpl::Deserialize() ERROR: Failed to deserialize chunk count! "
+                    << "Bitstream read offset: " << deserializeParameters->serializationBitstream[0].GetReadOffset()
+                    << " | Total bytes: " << deserializeParameters->serializationBitstream[0].GetNumberOfBytesUsed());
     }
 
     // load the maximum number of chunks
