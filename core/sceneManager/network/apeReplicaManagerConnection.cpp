@@ -49,6 +49,7 @@ SOFTWARE.*/
 #include "apeRigidBodyImpl.h"
 #include "apeCommandImpl.h"
 #include "apeCommandResponseImpl.h"
+#include "apeAudioImpl.h"
 
 ape::ReplicaManagerConnection::ReplicaManagerConnection(const RakNet::SystemAddress &_systemAddress, RakNet::RakNetGUID _guid) : Connection_RM3(_systemAddress, _guid)
 {
@@ -220,6 +221,11 @@ RakNet::Replica3* ape::ReplicaManagerConnection::AllocReplica(RakNet::BitStream 
 		{
 			if (auto entity = mpSceneManagerImpl->createEntity(entityName.C_String(), ape::Entity::POINT_CLOUD, true, ownerID.C_String()).lock())
 				return ((ape::PointCloudImpl*)entity.get());
+		}
+		else if (objectType == "Audio")
+		{
+			if (auto entity = mpSceneManagerImpl->createEntity(entityName.C_String(), ape::Entity::AUDIO, true, ownerID.C_String()).lock())
+				return ((ape::AudioImpl*)entity.get());
 		}
 	}
 	
