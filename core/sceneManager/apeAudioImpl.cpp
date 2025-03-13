@@ -64,6 +64,10 @@ RakNet::RM3SerializationResult ape::AudioImpl::Serialize(RakNet::SerializeParame
         return RakNet::RM3SR_DO_NOT_SERIALIZE;
 
     APE_LOG_DEBUG("AudioImpl::Serialize() called");
+
+    serializeParameters->outputBitstream[0].Reset();
+    APE_LOG_DEBUG("AudioImpl::Serialize() Bitstream reset done.");
+
     RakNet::VariableDeltaSerializer::SerializationContext serializationContext;
     serializeParameters->pro[0].reliability = RELIABLE_ORDERED;
     mVariableDeltaSerializer.BeginIdenticalSerialize(&serializationContext, serializeParameters->whenLastSerialized == 0, &serializeParameters->outputBitstream[0]);
@@ -73,7 +77,13 @@ RakNet::RM3SerializationResult ape::AudioImpl::Serialize(RakNet::SerializeParame
 
     // save the number of audio chunks
     size_t audioChunkCount = mAudioChunks.size();
+
+    // Debug: Log chunk count offset before serialization
+    APE_LOG_DEBUG("AudioImpl::Serialize() Before writing chunk count | Offset: " 
+              << serializeParameters->outputBitstream[0].GetNumberOfBytesUsed());
     mVariableDeltaSerializer.SerializeVariable(&serializationContext, audioChunkCount);
+    APE_LOG_DEBUG("AudioImpl::Serialize() After writing chunk count | Offset: " 
+              << serializeParameters->outputBitstream[0].GetNumberOfBytesUsed());
 
     // save each audio chunk
     for (const auto& chunk : mAudioChunks)
@@ -123,6 +133,8 @@ void ape::AudioImpl::Deserialize(RakNet::DeserializeParameters* deserializeParam
 
     // load the number of audio chunks
     size_t audioChunkCount = 0;
+    APE_LOG_DEBUG("AudioImpl::Deserialize() Before reading chunk count | Read Offset: " 
+              << deserializeParameters->serializationBitstream[0].GetReadOffset());
     if (mVariableDeltaSerializer.DeserializeVariable(&deserializationContext, audioChunkCount))
     {
         APE_LOG_DEBUG("AudioImpl::Deserialize() chunk count: " << audioChunkCount 
@@ -181,6 +193,8 @@ void ape::AudioImpl::Deserialize(RakNet::DeserializeParameters* deserializeParam
                     << "Bitstream read offset: " << deserializeParameters->serializationBitstream[0].GetReadOffset()
                     << " | Total bytes: " << deserializeParameters->serializationBitstream[0].GetNumberOfBytesUsed());
     }
+    APE_LOG_DEBUG("AudioImpl::Deserialize() After reading chunk count | Read Offset: " 
+              << deserializeParameters->serializationBitstream[0].GetReadOffset());
 
     // load the maximum number of chunks
     size_t oldMaxChunks = mMaxChunks;
