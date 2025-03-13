@@ -302,7 +302,6 @@ bool ape::apeGStreamerPlugin::loadNextAudioChunk(size_t chunkSize)
         APE_LOG_DEBUG("[GStreamerPlugin]::loadNextAudioChunk() Adding chunk to audio entity...");
         if (auto audio = std::static_pointer_cast<ape::IAudio>(mpSceneManager->getEntity(mCurrentAudioEntityId).lock())) {
             audio->appendAudioData(buffer);
-            APE_LOG_DEBUG("[GStreamerPlugin]::loadNextAudioChunk() Chunk added, size: " << buffer.size());
         }
     }
 
