@@ -255,6 +255,17 @@ void ape::apeGStreamerPlugin::Init()
         mAudioFilePosition = 0;
         APE_LOG_DEBUG("[GStreamerPlugin]::Init() File opened successfully. Size: " << mAudioDataSize);
 
+        // create an audio sync entity
+        mCurrentAudioSyncEntityId = "audiosync_" + audioFileName;
+        APE_LOG_DEBUG("[GStreamerPlugin]::Init() Creating AudioSync entity: " << mCurrentAudioSyncEntityId);
+        if (auto audioSync = std::static_pointer_cast<ape::IAudioSync>(
+                mpSceneManager->createEntity(mCurrentAudioSyncEntityId, ape::Entity::AUDIO_SYNC, true, mpCoreConfig->getNetworkGUID()).lock()))
+        {
+            APE_LOG_DEBUG("[GStreamerPlugin]::Init() AudioSync entity created.");
+        }
+        else {
+            APE_LOG_ERROR("[GStreamerPlugin]::Init() Failed to create AudioSync entity!");
+        }
 
         // create an audio entity
         mCurrentAudioEntityId = "audio_" + audioFileName;
@@ -267,19 +278,6 @@ void ape::apeGStreamerPlugin::Init()
         }
         else {
             APE_LOG_ERROR("[GStreamerPlugin]::Init() Failed to create Audio entity!");
-        }
-
-        // create an audio sync entity
-        mCurrentAudioSyncEntityId = "audiosync_" + audioFileName;
-        APE_LOG_DEBUG("[GStreamerPlugin]::Init() Creating AudioSync entity: " << mCurrentAudioSyncEntityId);
-        if (auto audioSync = std::static_pointer_cast<ape::IAudioSync>(
-                mpSceneManager->createEntity(mCurrentAudioSyncEntityId, ape::Entity::AUDIO_SYNC, true, mpCoreConfig->getNetworkGUID()).lock()))
-        {
-            APE_LOG_DEBUG("[GStreamerPlugin]::Init() AudioSync entity created.");
-            mAudioSync = audioSync;
-        }
-        else {
-            APE_LOG_ERROR("[GStreamerPlugin]::Init() Failed to create AudioSync entity!");
         }
     }
 
@@ -339,7 +337,15 @@ void ape::apeGStreamerPlugin::Run()
 
         GstState state;
         gst_element_get_state(pipeline_chunk, &state, nullptr, GST_CLOCK_TIME_NONE);
+        
         bool isPlaying = (state == GST_STATE_PLAYING);
+
+        APE_LOG_DEBUG("[GStreamerPlugin]::Run() Guest> GStreamer state: " << gst_element_state_get_name(state) 
+                    << ", isPlaying: " << isPlaying
+                    << ", isHost: " << mIsHost
+                    << ", mAudioSync: " << (mAudioSync ? "true" : "false")
+                    << ", isHostSyncActive: " << isHostSyncActive
+                    << ", isGuestSyncActive: " << isGuestSyncActive);
 
         // Host sends playback time to clients
         if (isHostSyncActive && isPlaying)
