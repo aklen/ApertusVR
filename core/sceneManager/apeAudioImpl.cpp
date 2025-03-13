@@ -99,12 +99,18 @@ RakNet::RM3SerializationResult ape::AudioImpl::Serialize(RakNet::SerializeParame
 
     modified = false;
     mVariableDeltaSerializer.EndSerialize(&serializationContext);
+
+    APE_LOG_DEBUG("AudioImpl::Serialize() Total serialized bytes: " 
+              << serializeParameters->outputBitstream[0].GetNumberOfBytesUsed());
+
     return RakNet::RM3SR_BROADCAST_IDENTICALLY_FORCE_SERIALIZATION;
 }
 
 void ape::AudioImpl::Deserialize(RakNet::DeserializeParameters* deserializeParameters)
 {
     APE_LOG_DEBUG("AudioImpl::Deserialize() called");
+    APE_LOG_DEBUG("AudioImpl::Deserialize() Received bitstream size: " << deserializeParameters->serializationBitstream[0].GetNumberOfBytesUsed());
+
     RakNet::VariableDeltaSerializer::DeserializationContext deserializationContext;
     mVariableDeltaSerializer.BeginDeserialize(&deserializationContext, &deserializeParameters->serializationBitstream[0]);
 
