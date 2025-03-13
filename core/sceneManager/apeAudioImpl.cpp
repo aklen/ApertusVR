@@ -12,7 +12,7 @@ ape::AudioImpl::AudioImpl(std::string name, bool replicate, std::string ownerID,
     mpEventManagerImpl = ((ape::EventManagerImpl*)ape::IEventManager::getSingletonPtr());
     mpSceneManager = ape::ISceneManager::getSingletonPtr();
     mAudioChunks = std::deque<std::vector<uint8_t>>();
-    mMaxChunks = 2;
+    mMaxChunks = 1;
     modified = false;
 }
 
