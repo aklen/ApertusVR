@@ -56,6 +56,7 @@ namespace ape
 
 		GstElement* getAppSrc();
 		ape::ISceneManager* getSceneManager();
+		ape::EventManagerImpl* getEventManager();
 		GstElement* GetPipelineUri();
 		GstElement* GetPipelineChunk();
 

@@ -469,6 +469,11 @@ ape::ISceneManager* ape::apeGStreamerPlugin::getSceneManager()
     return mpSceneManager;
 }
 
+ape::EventManagerImpl* ape::apeGStreamerPlugin::getEventManager()
+{
+    return mpEventManagerImpl;
+}
+
 GstElement* ape::apeGStreamerPlugin::GetPipelineUri()
 {
     return pipeline_uri;
