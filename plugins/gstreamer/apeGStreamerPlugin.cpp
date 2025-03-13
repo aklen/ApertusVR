@@ -334,21 +334,36 @@ void ape::apeGStreamerPlugin::Run()
 	{
 		std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
+        bool isHostSyncActive = mIsHost && mAudioSync;
+        bool isGuestSyncActive = !mIsHost && mAudioSync;
+
+        GstState state;
+        gst_element_get_state(pipeline_chunk, &state, nullptr, GST_CLOCK_TIME_NONE);
+        bool isPlaying = (state == GST_STATE_PLAYING);
+
         // Host sends playback time to clients
-        if (mIsHost && mAudioSync)
+        if (isHostSyncActive && isPlaying)
         {
             std::chrono::milliseconds playbackTime = getCurrentGStreamerPlaybackTime();
             mAudioSync->setPlaybackTime(playbackTime);
-            APE_LOG_DEBUG("[GStreamerPlugin]::Run() Updated AudioSync timestamp: " << playbackTime.count() << " ms");
+            APE_LOG_DEBUG("[GStreamerPlugin]::Run() Host> Updated AudioSync timestamp: " << playbackTime.count() << " ms");
+        }
+        else if (isHostSyncActive)
+        {
+            APE_LOG_DEBUG("[GStreamerPlugin]::Run() Host> Skipping sync update, GStreamer is not in PLAYING state.");
         }
 
         // Clients adjust playback to host's timestamp
-        if (!mIsHost && mAudioSync)
+        if (isGuestSyncActive && isPlaying)
         {
             std::chrono::milliseconds receivedTime = mAudioSync->getPlaybackTime();
-            APE_LOG_DEBUG("[GStreamerPlugin]::Run() Adjusting playback to received timestamp: " 
-                          << receivedTime.count() << " ms");
+            APE_LOG_DEBUG("[GStreamerPlugin]::Run() Guest> Adjusting playback to received timestamp: " 
+                        << receivedTime.count() << " ms");
             adjustGStreamerPlayback(receivedTime);
+        }
+        else if (isGuestSyncActive)
+        {
+            APE_LOG_DEBUG("[GStreamerPlugin]::Run() Guest> Skipping sync adjustment, GStreamer is not in PLAYING state.");
         }
 	}
 	APE_LOG_FUNC_LEAVE();
