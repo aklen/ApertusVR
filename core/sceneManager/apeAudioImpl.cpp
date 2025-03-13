@@ -128,15 +128,21 @@ void ape::AudioImpl::Deserialize(RakNet::DeserializeParameters* deserializeParam
     }
 
     // load the maximum number of chunks
+    size_t oldMaxChunks = mMaxChunks;
     if (mVariableDeltaSerializer.DeserializeVariable(&deserializationContext, mMaxChunks))
     {
-        mpEventManagerImpl->fireEvent(ape::Event(mName, ape::Event::Type::AUDIO_CHUNK_MAX));
+        if (oldMaxChunks != mMaxChunks) {
+            mpEventManagerImpl->fireEvent(ape::Event(mName, ape::Event::Type::AUDIO_CHUNK_MAX));
+        }
     }
 
     // load the current playing chunk index
+    size_t oldPlayingChunkIndex = mPlayingChunkIndex;
     if (mVariableDeltaSerializer.DeserializeVariable(&deserializationContext, mPlayingChunkIndex))
     {
-        mpEventManagerImpl->fireEvent(ape::Event(mName, ape::Event::Type::AUDIO_CHUNK_INDEX));
+        if (oldPlayingChunkIndex != mPlayingChunkIndex) {
+            mpEventManagerImpl->fireEvent(ape::Event(mName, ape::Event::Type::AUDIO_CHUNK_INDEX));
+        }
     }
 
     mVariableDeltaSerializer.EndDeserialize(&deserializationContext);
