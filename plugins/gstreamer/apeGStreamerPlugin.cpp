@@ -210,6 +210,9 @@ void ape::apeGStreamerPlugin::eventCallBack(const ape::Event& event)
             mAudioSync = audioSync;
         }
     }
+    else {
+        APE_LOG_DEBUG("[GStreamerPlugin]::eventCallBack() Ignoring event.");
+    }
 }
 
 void ape::apeGStreamerPlugin::Init()
