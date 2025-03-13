@@ -33,6 +33,7 @@ void ape::AudioImpl::appendAudioData(const std::vector<uint8_t>& newAudioData)
     mAudioChunks.push_back(newAudioData);
     modified = true;
 
+    APE_LOG_DEBUG("AudioImpl::appendAudioData() chunk added (size: " << newAudioData.size() << "), firing event...");
     mpEventManagerImpl->fireEvent(ape::Event(mName, ape::Event::Type::AUDIO_CHUNK_LOAD));
 }
 
