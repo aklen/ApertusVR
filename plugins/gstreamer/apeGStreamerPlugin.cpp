@@ -70,10 +70,15 @@ static void on_need_data(GstElement* src, guint size, gpointer user_data)
             }
             else {
                 APE_LOG_DEBUG("[GStreamerPlugin]::on_need_data() No more chunks, sending EOS.");
-                GstBus* bus = gst_element_get_bus(plugin->GetPipelineChunk());
-                GstMessage* eos_msg = gst_message_new_eos(GST_OBJECT(src));
-                gst_bus_post(bus, eos_msg);
-                gst_object_unref(bus);
+
+                // old method
+                // GstBus* bus = gst_element_get_bus(plugin->GetPipelineChunk());
+                // GstMessage* eos_msg = gst_message_new_eos(GST_OBJECT(src));
+                // gst_bus_post(bus, eos_msg);
+                // gst_object_unref(bus);
+
+                // new method
+                plugin->getEventManager()->fireEvent(ape::Event(plugin->GetCurrentAudioEntityId(), ape::Event::Type::AUDIO_END_OF_STREAM));
             }
         // }
     }
