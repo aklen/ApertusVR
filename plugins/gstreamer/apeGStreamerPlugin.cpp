@@ -14,10 +14,15 @@ const char* EventTypeToString(ape::Event::Type type) {
         case ape::Event::Type::AUDIO_DELETE: return "AUDIO_DELETE";
         case ape::Event::Type::AUDIO_PLAYBACK_STATE: return "AUDIO_PLAYBACK_STATE";
         case ape::Event::Type::AUDIO_DATA: return "AUDIO_DATA";
+        case ape::Event::Type::AUDIO_DATA_SIZE: return "AUDIO_DATA_SIZE";
         case ape::Event::Type::AUDIO_SAMPLE_RATE: return "AUDIO_SAMPLE_RATE";
         case ape::Event::Type::AUDIO_CHANNELS: return "AUDIO_CHANNELS";
-        case ape::Event::Type::AUDIO_STREAMING: return "AUDIO_STREAMING";
         case ape::Event::Type::AUDIO_CHUNK_LOAD: return "AUDIO_CHUNK_LOAD";
+        case ape::Event::Type::AUDIO_CHUNK_REQUEST: return "AUDIO_CHUNK_REQUEST";
+        case ape::Event::Type::AUDIO_CHUNK_MAX: return "AUDIO_CHUNK_MAX";
+        case ape::Event::Type::AUDIO_CHUNK_INDEX: return "AUDIO_CHUNK_INDEX";
+        case ape::Event::Type::AUDIO_SEEK_POSITION: return "AUDIO_SEEK_POSITION";
+        case ape::Event::Type::AUDIO_STREAMING: return "AUDIO_STREAMING";
         default: return "OTHER";
     }
 }
