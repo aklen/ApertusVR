@@ -205,6 +205,11 @@ void ape::apeGStreamerPlugin::eventCallBack(const ape::Event& event)
         gst_bus_post(bus, eos_msg);
         gst_object_unref(bus);
     }
+    else if (event.type == ape::Event::Type::AUDIO_SYNC_CREATE) {
+        if (auto audioSync = std::static_pointer_cast<ape::IAudioSync>(mpSceneManager->getEntity(event.subjectName).lock())) {
+            mAudioSync = audioSync;
+        }
+    }
 }
 
 void ape::apeGStreamerPlugin::Init()
