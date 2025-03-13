@@ -29,6 +29,14 @@ void ape::AudioSyncImpl::setPlaybackTime(std::chrono::milliseconds time)
     modified = true;
 }
 
+std::string ape::AudioSyncImpl::getOwner() {
+    return mOwnerID;
+}
+
+void ape::AudioSyncImpl::setOwner(std::string ownerID) {
+    mOwnerID = ownerID;
+}
+
 void ape::AudioSyncImpl::WriteAllocationID(RakNet::Connection_RM3* destinationConnection, RakNet::BitStream* allocationIdBitstream) const
 {
     allocationIdBitstream->Write(mObjectType);

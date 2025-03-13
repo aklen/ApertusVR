@@ -16,7 +16,8 @@ namespace ape
     public:
         virtual std::chrono::milliseconds getPlaybackTime() = 0;
         virtual void setPlaybackTime(std::chrono::milliseconds timestamp) = 0;
-
+        virtual void setOwner(std::string ownerID) = 0;
+        virtual std::string getOwner() = 0;
     };
 
     typedef std::shared_ptr<ape::IAudioSync> AudioSyncSharedPtr;

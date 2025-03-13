@@ -19,6 +19,8 @@ namespace ape
         std::chrono::milliseconds getPlaybackTime() override;
         void setPlaybackTime(std::chrono::milliseconds timestamp) override;
 
+        void setOwner(std::string ownerID) override;
+        std::string getOwner() override;
         void WriteAllocationID(RakNet::Connection_RM3* destinationConnection, RakNet::BitStream* allocationIdBitstream) const override;
         RakNet::RM3SerializationResult Serialize(RakNet::SerializeParameters* serializeParameters) override;
         void Deserialize(RakNet::DeserializeParameters* deserializeParameters) override;
@@ -26,8 +28,9 @@ namespace ape
     private:
         ape::EventManagerImpl* mpEventManagerImpl;
         ape::ISceneManager* mpSceneManager;
-        std::chrono::milliseconds mPlaybackTime;
+
         std::mutex mMutex;
+        std::chrono::milliseconds mPlaybackTime;
         bool mIsHostMachine;
         bool modified;
     };
