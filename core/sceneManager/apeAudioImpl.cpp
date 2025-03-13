@@ -75,22 +75,18 @@ RakNet::RM3SerializationResult ape::AudioImpl::Serialize(RakNet::SerializeParame
 
     RakNet::VariableDeltaSerializer::SerializationContext serializationContext;
     serializeParameters->pro[0].reliability = RELIABLE_ORDERED;
-    mVariableDeltaSerializer.BeginIdenticalSerialize(&serializationContext, serializeParameters->whenLastSerialized == 0, &serializeParameters->outputBitstream[0]);
+    mVariableDeltaSerializer.BeginIdenticalSerialize(&serializationContext, true, &serializeParameters->outputBitstream[0]);
 
-    // save the name of the audio
+    // Save the name of the audio
     mVariableDeltaSerializer.SerializeVariable(&serializationContext, RakNet::RakString(mName.c_str()));
 
-    // save the number of audio chunks
+    // Save the number of audio chunks
     size_t audioChunkCount = mAudioChunks.size();
-
-    // Debug: Log chunk count offset before serialization
-    APE_LOG_DEBUG("AudioImpl::Serialize() Before writing chunk count | Offset: " 
-              << serializeParameters->outputBitstream[0].GetNumberOfBytesUsed());
+    APE_LOG_DEBUG("AudioImpl::Serialize() Before writing chunk count | Offset: " << serializeParameters->outputBitstream[0].GetWriteOffset());
     mVariableDeltaSerializer.SerializeVariable(&serializationContext, audioChunkCount);
-    APE_LOG_DEBUG("AudioImpl::Serialize() After writing chunk count | Offset: " 
-              << serializeParameters->outputBitstream[0].GetNumberOfBytesUsed());
+    APE_LOG_DEBUG("AudioImpl::Serialize() After writing chunk count | Offset: " << serializeParameters->outputBitstream[0].GetWriteOffset());
 
-    // save each audio chunk
+    // Save each audio chunk
     for (const auto& chunk : mAudioChunks)
     {
         size_t chunkSize = chunk.size();
@@ -101,22 +97,21 @@ RakNet::RM3SerializationResult ape::AudioImpl::Serialize(RakNet::SerializeParame
             mVariableDeltaSerializer.SerializeVariable(&serializationContext, byte);
         }
 
-        // calculate the CRC32 hash of the chunk
+        // Calculate the CRC32 hash of the chunk
         uint32_t chunkHash = calculateCRC32(chunk);
         APE_LOG_DEBUG("AudioImpl::Serialize() chunk size: " << chunkSize << ", CRC32: " << chunkHash);
     }
 
-    // save the maximum number of chunks
+    // Save the maximum number of chunks
     mVariableDeltaSerializer.SerializeVariable(&serializationContext, mMaxChunks);
 
-    // save the current playing chunk index
+    // Save the current playing chunk index
     mVariableDeltaSerializer.SerializeVariable(&serializationContext, mPlayingChunkIndex);
 
     modified = false;
     mVariableDeltaSerializer.EndSerialize(&serializationContext);
 
-    APE_LOG_DEBUG("AudioImpl::Serialize() Total serialized bytes: " 
-              << serializeParameters->outputBitstream[0].GetNumberOfBytesUsed());
+    APE_LOG_DEBUG("AudioImpl::Serialize() Total serialized bytes: " << serializeParameters->outputBitstream[0].GetNumberOfBytesUsed());
 
     return RakNet::RM3SR_BROADCAST_IDENTICALLY_FORCE_SERIALIZATION;
 }
@@ -129,23 +124,21 @@ void ape::AudioImpl::Deserialize(RakNet::DeserializeParameters* deserializeParam
     RakNet::VariableDeltaSerializer::DeserializationContext deserializationContext;
     mVariableDeltaSerializer.BeginDeserialize(&deserializationContext, &deserializeParameters->serializationBitstream[0]);
 
-    // load the name of the audio
+    // Load the name of the audio
     RakNet::RakString name;
     if (mVariableDeltaSerializer.DeserializeVariable(&deserializationContext, name))
     {
         mName = name.C_String();
     }
 
-    // load the number of audio chunks
+    // Load the number of audio chunks
     size_t audioChunkCount = 0;
-    APE_LOG_DEBUG("AudioImpl::Deserialize() Before reading chunk count | Read Offset: " 
-              << deserializeParameters->serializationBitstream[0].GetReadOffset());
+    APE_LOG_DEBUG("AudioImpl::Deserialize() Before reading chunk count | Read Offset: " << deserializeParameters->serializationBitstream[0].GetReadOffset());
     if (mVariableDeltaSerializer.DeserializeVariable(&deserializationContext, audioChunkCount))
     {
-        APE_LOG_DEBUG("AudioImpl::Deserialize() chunk count: " << audioChunkCount 
-                   << " | Bitstream read offset: " << deserializeParameters->serializationBitstream[0].GetReadOffset());
+        APE_LOG_DEBUG("AudioImpl::Deserialize() chunk count: " << audioChunkCount << " | Bitstream read offset: " << deserializeParameters->serializationBitstream[0].GetReadOffset());
 
-        if (audioChunkCount > 0)  // only clear the chunks if we have some to load
+        if (audioChunkCount > 0)  // Only clear the chunks if we have some to load
         {
             APE_LOG_DEBUG("AudioImpl::Deserialize() clearing audio chunks (before: " << mAudioChunks.size() << ")");
             mAudioChunks.clear();
@@ -157,24 +150,12 @@ void ape::AudioImpl::Deserialize(RakNet::DeserializeParameters* deserializeParam
         for (size_t i = 0; i < audioChunkCount; i++)
         {
             size_t chunkSize = 0;
-
-            // Debugging before deserialization
-            APE_LOG_DEBUG("AudioImpl::Deserialize() Before chunk size read | Bitstream read offset: "
-                        << deserializeParameters->serializationBitstream[0].GetReadOffset()
-                        << " | Total bytes: " << deserializeParameters->serializationBitstream[0].GetNumberOfBytesUsed());
-
-            if (mVariableDeltaSerializer.DeserializeVariable(&deserializationContext, chunkSize))
+            if (!mVariableDeltaSerializer.DeserializeVariable(&deserializationContext, chunkSize))
             {
-                APE_LOG_DEBUG("AudioImpl::Deserialize() Chunk[" << i << "] Size: " << chunkSize);
+                APE_LOG_ERROR("AudioImpl::Deserialize() ERROR: Failed to deserialize chunk size! Bitstream read offset: " << deserializeParameters->serializationBitstream[0].GetReadOffset());
+                return;
             }
-            else
-            {
-                APE_LOG_ERROR("AudioImpl::Deserialize() ERROR: Failed to deserialize chunk size! "
-                            << "Bitstream read offset: " << deserializeParameters->serializationBitstream[0].GetReadOffset()
-                            << " | Total bytes: " << deserializeParameters->serializationBitstream[0].GetNumberOfBytesUsed());
-                return; // Stop deserialization if this fails
-            }
-         
+
             std::vector<uint8_t> chunk(chunkSize);
             for (size_t j = 0; j < chunkSize; j++)
             {
@@ -194,27 +175,27 @@ void ape::AudioImpl::Deserialize(RakNet::DeserializeParameters* deserializeParam
     }
     else
     {
-        APE_LOG_ERROR("AudioImpl::Deserialize() ERROR: Failed to deserialize chunk count! "
-                    << "Bitstream read offset: " << deserializeParameters->serializationBitstream[0].GetReadOffset()
-                    << " | Total bytes: " << deserializeParameters->serializationBitstream[0].GetNumberOfBytesUsed());
+        APE_LOG_ERROR("AudioImpl::Deserialize() ERROR: Failed to deserialize chunk count! Bitstream read offset: " << deserializeParameters->serializationBitstream[0].GetReadOffset());
     }
-    APE_LOG_DEBUG("AudioImpl::Deserialize() After reading chunk count | Read Offset: " 
-              << deserializeParameters->serializationBitstream[0].GetReadOffset());
+    
+    APE_LOG_DEBUG("AudioImpl::Deserialize() After reading chunk count | Read Offset: " << deserializeParameters->serializationBitstream[0].GetReadOffset());
 
-    // load the maximum number of chunks
+    // Deserialize max chunks
     size_t oldMaxChunks = mMaxChunks;
     if (mVariableDeltaSerializer.DeserializeVariable(&deserializationContext, mMaxChunks))
     {
-        if (oldMaxChunks != mMaxChunks) {
+        if (oldMaxChunks != mMaxChunks)
+        {
             mpEventManagerImpl->fireEvent(ape::Event(mName, ape::Event::Type::AUDIO_CHUNK_MAX));
         }
     }
 
-    // load the current playing chunk index
+    // Deserialize playing chunk index
     size_t newPlayingChunkIndex = 0;
     if (mVariableDeltaSerializer.DeserializeVariable(&deserializationContext, newPlayingChunkIndex))
     {
-        if (newPlayingChunkIndex != mPlayingChunkIndex) {
+        if (newPlayingChunkIndex != mPlayingChunkIndex)
+        {
             mPlayingChunkIndex = newPlayingChunkIndex;
             mpEventManagerImpl->fireEvent(ape::Event(mName, ape::Event::Type::AUDIO_CHUNK_INDEX));
         }
