@@ -339,7 +339,7 @@ void ape::apeGStreamerPlugin::Run()
 	APE_LOG_FUNC_ENTER();
 	while (true)
 	{
-		std::this_thread::sleep_for(std::chrono::milliseconds(200));
+		std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
         bool isHostSyncActive = mIsHost && mAudioSync;
         bool isGuestSyncActive = !mIsHost && mAudioSync;
