@@ -8,23 +8,53 @@ const char* EventGroupToString(ape::Event::Group group) {
     }
 }
 
-const char* EventTypeToString(ape::Event::Type type) {
+const std::string EventTypeToString(ape::Event::Type type) {
+    std::string result = "";
     switch (type) {
-        case ape::Event::Type::AUDIO_CREATE: return "AUDIO_CREATE";
-        case ape::Event::Type::AUDIO_DELETE: return "AUDIO_DELETE";
-        case ape::Event::Type::AUDIO_PLAYBACK_STATE: return "AUDIO_PLAYBACK_STATE";
-        case ape::Event::Type::AUDIO_DATA: return "AUDIO_DATA";
-        case ape::Event::Type::AUDIO_DATA_SIZE: return "AUDIO_DATA_SIZE";
-        case ape::Event::Type::AUDIO_SAMPLE_RATE: return "AUDIO_SAMPLE_RATE";
-        case ape::Event::Type::AUDIO_CHANNELS: return "AUDIO_CHANNELS";
-        case ape::Event::Type::AUDIO_CHUNK_LOAD: return "AUDIO_CHUNK_LOAD";
-        case ape::Event::Type::AUDIO_CHUNK_REQUEST: return "AUDIO_CHUNK_REQUEST";
-        case ape::Event::Type::AUDIO_CHUNK_MAX: return "AUDIO_CHUNK_MAX";
-        case ape::Event::Type::AUDIO_CHUNK_INDEX: return "AUDIO_CHUNK_INDEX";
-        case ape::Event::Type::AUDIO_SEEK_POSITION: return "AUDIO_SEEK_POSITION";
-        case ape::Event::Type::AUDIO_STREAMING: return "AUDIO_STREAMING";
-        default: return "OTHER";
+        case ape::Event::Type::AUDIO_CREATE:
+            result = "AUDIO_CREATE";
+            break;
+        case ape::Event::Type::AUDIO_DELETE: 
+            result = "AUDIO_DELETE";
+            break;
+        case ape::Event::Type::AUDIO_PLAYBACK_STATE: 
+            result = "AUDIO_PLAYBACK_STATE";
+            break;
+        case ape::Event::Type::AUDIO_DATA:
+            result = "AUDIO_DATA";
+            break;
+        case ape::Event::Type::AUDIO_DATA_SIZE:
+            result = "AUDIO_DATA_SIZE";
+            break;
+        case ape::Event::Type::AUDIO_SAMPLE_RATE:
+            result = "AUDIO_SAMPLE_RATE";
+            break;
+        case ape::Event::Type::AUDIO_CHANNELS:
+            result = "AUDIO_CHANNELS";
+            break;
+        case ape::Event::Type::AUDIO_CHUNK_LOAD:
+            result = "AUDIO_CHUNK_LOAD";
+            break;
+        case ape::Event::Type::AUDIO_CHUNK_REQUEST:
+            result = "AUDIO_CHUNK_REQUEST";
+            break;
+        case ape::Event::Type::AUDIO_CHUNK_MAX:
+            result = "AUDIO_CHUNK_MAX";
+            break;
+        case ape::Event::Type::AUDIO_CHUNK_INDEX:
+            result = "AUDIO_CHUNK_INDEX";
+            break;
+        case ape::Event::Type::AUDIO_SEEK_POSITION:
+            result = "AUDIO_SEEK_POSITION";
+            break;
+        case ape::Event::Type::AUDIO_STREAMING:
+            result = "AUDIO_STREAMING";
+            break;
+        default:
+            result = "OTHER (" + std::to_string(type) + ")";
+            break;
     }
+    return result;
 }
 
 static void on_pad_added(GstElement* src, GstPad* new_pad, gpointer data)
