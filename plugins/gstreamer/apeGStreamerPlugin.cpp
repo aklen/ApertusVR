@@ -144,7 +144,7 @@ ape::apeGStreamerPlugin::apeGStreamerPlugin()
     mpSceneManager = ape::ISceneManager::getSingletonPtr();
     mCurrentAudioEntityId = "";
     mCurrentAudioSyncEntityId = "";
-    mPipelineDelay = std::chrono::milliseconds(100);
+    mPipelineDelay = std::chrono::milliseconds(150);
     mIsHost = mpCoreConfig->getNetworkConfig().participant == SceneNetwork::ParticipantType::HOST;
 
     // GStreamer initialization
@@ -398,7 +398,7 @@ void ape::apeGStreamerPlugin::Run()
         // Host sends playback time to clients
         if (isHostSyncActive && isPlaying)
         {
-            std::chrono::milliseconds playbackTime = getCurrentGStreamerPlaybackTime() - mPipelineDelay;
+            std::chrono::milliseconds playbackTime = getCurrentGStreamerPlaybackTime() + mPipelineDelay;
             mAudioSync->setPlaybackTime(playbackTime);
             APE_LOG_DEBUG("[GStreamerPlugin]::Run() Host> Updated AudioSync timestamp: " << playbackTime.count() << " ms");
         }
