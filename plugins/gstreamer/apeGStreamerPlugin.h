@@ -96,6 +96,7 @@ namespace ape
 		void GStreamerMainLoop();
 
 		// GStreamer time synchronization
+		std::chrono::milliseconds mPipelineDelay;
 		std::chrono::milliseconds getCurrentGStreamerPlaybackTime();
 		void adjustGStreamerPlayback(std::chrono::milliseconds receivedTime);
 		void seekGStreamerPlayback(std::chrono::milliseconds receivedTime);

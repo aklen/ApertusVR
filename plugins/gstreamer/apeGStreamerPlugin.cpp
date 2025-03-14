@@ -144,6 +144,7 @@ ape::apeGStreamerPlugin::apeGStreamerPlugin()
     mpSceneManager = ape::ISceneManager::getSingletonPtr();
     mCurrentAudioEntityId = "";
     mCurrentAudioSyncEntityId = "";
+    mPipelineDelay = std::chrono::milliseconds(100);
     mIsHost = mpCoreConfig->getNetworkConfig().participant == SceneNetwork::ParticipantType::HOST;
 
     // GStreamer initialization
@@ -170,7 +171,7 @@ ape::apeGStreamerPlugin::apeGStreamerPlugin()
         GstElement* audioconvert = gst_element_factory_make("audioconvert", "converter");
         GstElement* audioresample = gst_element_factory_make("audioresample", "resampler");
         GstElement* delay = gst_element_factory_make("identity", "delay");
-        g_object_set(G_OBJECT(delay), "sync", TRUE, "ts-offset", mIsHost ? 100000000 : 0, NULL); // 100 ms delay for host
+        g_object_set(G_OBJECT(delay), "sync", TRUE, "ts-offset", mIsHost ? (mPipelineDelay.count() * GST_MSECOND) : 0, nullptr); // 100 ms delay for host
         // GstElement* queue = gst_element_factory_make("queue", "buffer-queue");
         // g_object_set(queue, "min-threshold-time", (guint64)150 * GST_MSECOND, nullptr); // 150 ms delay for the queue
         GstElement* autoaudiosink = gst_element_factory_make("autoaudiosink", "audio-output");
@@ -397,7 +398,7 @@ void ape::apeGStreamerPlugin::Run()
         // Host sends playback time to clients
         if (isHostSyncActive && isPlaying)
         {
-            std::chrono::milliseconds playbackTime = getCurrentGStreamerPlaybackTime();
+            std::chrono::milliseconds playbackTime = getCurrentGStreamerPlaybackTime() - mPipelineDelay;
             mAudioSync->setPlaybackTime(playbackTime);
             APE_LOG_DEBUG("[GStreamerPlugin]::Run() Host> Updated AudioSync timestamp: " << playbackTime.count() << " ms");
         }
