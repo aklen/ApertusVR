@@ -229,7 +229,9 @@ void ape::SceneNetworkImpl::init()
 	mpRakReplicaPeer->AttachPlugin(mpReplicaManager3.get());
 	mpReplicaManager3->SetNetworkIDManager(mpNetworkIDManager);
 	mpReplicaManager3->SetAutoManageConnections(false,true);
-	RakNet::SocketDescriptor sd;
+	
+	RakNet::SocketDescriptor sd(atoi(localNetworkConfig.hostReplicaPort.c_str()), "0.0.0.0");
+	APE_LOG_DEBUG("SocketDescriptor IP: " << sd.hostAddress);
 	sd.socketFamily = AF_INET;
 	if (mSelectedNetwork == ape::NetworkConfig::LAN)
 	{
@@ -241,13 +243,13 @@ void ape::SceneNetworkImpl::init()
 	RakNet::StartupResult sr = mpRakReplicaPeer->Startup(8, &sd, 1);
 	APE_LOG_DEBUG("Raknet StartupResult: " << (int)sr);
 	RakAssert(sr == RakNet::RAKNET_STARTED);
+
 	mpRakReplicaPeer->SetMaximumIncomingConnections(8);
 	mpRakReplicaPeer->SetTimeoutTime(30000,RakNet::UNASSIGNED_SYSTEM_ADDRESS);
 	mGuid = mpRakReplicaPeer->GetGuidFromSystemAddress(RakNet::UNASSIGNED_SYSTEM_ADDRESS);
-
 	mpCoreConfig->setNetworkGUID(mGuid.ToString());
 
-	mAddress = mpRakReplicaPeer->GetSystemAddressFromGuid(mGuid);
+	mAddress = RakNet::SystemAddress("0.0.0.0", atoi(localNetworkConfig.hostReplicaPort.c_str()));
 	APE_LOG_INFO("Our guid is: " << mGuid.ToString());
 	APE_LOG_DEBUG("Started on: " << mAddress.ToString(true));
 	if (mSelectedNetwork == ape::NetworkConfig::INTERNET)
