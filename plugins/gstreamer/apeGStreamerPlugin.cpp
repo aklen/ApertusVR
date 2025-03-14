@@ -170,8 +170,9 @@ ape::apeGStreamerPlugin::apeGStreamerPlugin()
         GstElement* audioconvert = gst_element_factory_make("audioconvert", "converter");
         GstElement* audioresample = gst_element_factory_make("audioresample", "resampler");
         GstElement* delay = gst_element_factory_make("identity", "delay");
-        g_object_set(G_OBJECT(delay), "sync", TRUE, "ts-offset", 100000000, NULL); // 100 ms késleltetés
+        g_object_set(G_OBJECT(delay), "sync", TRUE, "ts-offset", mIsHost ? 100000000 : 0, NULL); // 100 ms delay for host
         // GstElement* queue = gst_element_factory_make("queue", "buffer-queue");
+        // g_object_set(queue, "min-threshold-time", (guint64)150 * GST_MSECOND, nullptr); // 150 ms delay for the queue
         GstElement* autoaudiosink = gst_element_factory_make("autoaudiosink", "audio-output");
 
         if (!pipeline_chunk || !appsrc || !decodebin || !audioconvert || !audioresample || !delay || !autoaudiosink) {
@@ -198,9 +199,6 @@ ape::apeGStreamerPlugin::apeGStreamerPlugin()
             // queue,
             autoaudiosink,
             nullptr);
-
-        // Set a delay on the queue
-        // g_object_set(queue, "min-threshold-time", (guint64)150 * GST_MSECOND, nullptr); // 150 ms delay
 
         // Connect signals
         g_signal_connect(decodebin, "pad-added", G_CALLBACK(on_pad_added), audioconvert);
