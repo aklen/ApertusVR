@@ -166,24 +166,38 @@ ape::apeGStreamerPlugin::apeGStreamerPlugin()
     {
         pipeline_chunk = gst_pipeline_new("audio-pipeline");
         appsrc = gst_element_factory_make("appsrc", "audio-source");
-        // GstElement* queue = gst_element_factory_make("queue", "buffer-queue");
         GstElement* decodebin = gst_element_factory_make("decodebin", "decoder");
         GstElement* audioconvert = gst_element_factory_make("audioconvert", "converter");
         GstElement* audioresample = gst_element_factory_make("audioresample", "resampler");
+        GstElement* delay = gst_element_factory_make("identity", "delay");
+        g_object_set(G_OBJECT(delay), "sync", TRUE, "ts-offset", 100000000, NULL); // 100 ms késleltetés
+        // GstElement* queue = gst_element_factory_make("queue", "buffer-queue");
         GstElement* autoaudiosink = gst_element_factory_make("autoaudiosink", "audio-output");
 
-        // if (!pipeline_chunk || !appsrc || !queue || !decodebin || !audioconvert || !audioresample || !autoaudiosink) {
-        if (!pipeline_chunk || !appsrc || !decodebin || !audioconvert || !audioresample || !autoaudiosink) {
+        if (!pipeline_chunk || !appsrc || !decodebin || !audioconvert || !audioresample || !delay || !autoaudiosink) {
             APE_LOG_DEBUG("[GStreamerPlugin]::Constructor() Failed to create elements!");
             return;
         }
 
         // Add elements to the pipeline
-        gst_bin_add_many(GST_BIN(pipeline_chunk), appsrc, decodebin, audioconvert, audioresample, autoaudiosink, nullptr);
+        gst_bin_add_many(GST_BIN(pipeline_chunk),
+            appsrc,
+            decodebin,
+            audioconvert,
+            audioresample,
+            delay,
+            // queue,
+            autoaudiosink,
+            nullptr);
 
         // Link elements
         gst_element_link_many(appsrc, decodebin, nullptr);
-        gst_element_link_many(audioconvert, audioresample, autoaudiosink, nullptr);
+        gst_element_link_many(audioconvert, 
+            audioresample,
+            delay,
+            // queue,
+            autoaudiosink,
+            nullptr);
 
         // Set a delay on the queue
         // g_object_set(queue, "min-threshold-time", (guint64)150 * GST_MSECOND, nullptr); // 150 ms delay
