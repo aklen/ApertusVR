@@ -91,19 +91,19 @@ static void on_need_data(GstElement* src, guint size, gpointer user_data)
 {
     ape::apeGStreamerPlugin* plugin = static_cast<ape::apeGStreamerPlugin*>(user_data);
     if (!plugin) {
-        APE_LOG_DEBUG("[GStreamerPlugin]::on_need_data() Plugin is null!");
+        APE_LOG_ERROR("[GStreamerPlugin]::on_need_data() Plugin is null!");
         return;
     }
 
     if (!plugin->GetPipelineChunk()) {
-        APE_LOG_DEBUG("[GStreamerPlugin]::on_need_data() Pipeline not initialized!");
+        APE_LOG_ERROR("[GStreamerPlugin]::on_need_data() Pipeline not initialized!");
         return;
     }
 
     GstState state;
     gst_element_get_state(plugin->GetPipelineChunk(), &state, nullptr, GST_CLOCK_TIME_NONE);
     if (state != GST_STATE_PLAYING) {
-        APE_LOG_DEBUG("[GStreamerPlugin]::on_need_data() Ignoring need-data, pipeline not in PLAYING state.");
+        APE_LOG_ERROR("[GStreamerPlugin]::on_need_data() Ignoring need-data, pipeline not in PLAYING state.");
         return;
     }
 
@@ -117,7 +117,7 @@ static void on_need_data(GstElement* src, guint size, gpointer user_data)
                 APE_LOG_DEBUG("[GStreamerPlugin]::on_need_data() Loaded next chunk.");
             }
             else {
-                APE_LOG_DEBUG("[GStreamerPlugin]::on_need_data() No more chunks, sending EOS.");
+                APE_LOG_WARNING("[GStreamerPlugin]::on_need_data() No more chunks, sending EOS.");
 
                 // old method
                 // GstBus* bus = gst_element_get_bus(plugin->GetPipelineChunk());
