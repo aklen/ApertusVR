@@ -88,7 +88,7 @@ SOFTWARE.*/
 
 #define APE_LOG_FILE_WIDTH 31
 #define APE_LOG_LINE_WIDTH 5
-#define APE_LOG_FUNC_WIDTH 15
+#define APE_LOG_FUNC_WIDTH 22
 #define APE_LOG_FILL(WIDTH) std::setfill(' ') << std::setw(WIDTH)
 
 #define APE_LOG_WRITE(LEVEL, SS) \
