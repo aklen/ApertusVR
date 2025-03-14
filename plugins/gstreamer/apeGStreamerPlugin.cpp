@@ -176,13 +176,21 @@ ape::apeGStreamerPlugin::apeGStreamerPlugin()
             return;
         }
 
+        // Add elements to the pipeline
         gst_bin_add_many(GST_BIN(pipeline_chunk), appsrc, decodebin, audioconvert, audioresample, autoaudiosink, nullptr);
+
+        // Link elements
         gst_element_link_many(appsrc, decodebin, nullptr);
         gst_element_link_many(audioconvert, audioresample, autoaudiosink, nullptr);
 
+        // Set a delay on the queue
+        g_object_set(queue, "min-threshold-time", (guint64)150 * GST_MSECOND, nullptr); // 150 ms delay
+
+        // Connect signals
         g_signal_connect(decodebin, "pad-added", G_CALLBACK(on_pad_added), audioconvert);
         g_signal_connect(appsrc, "need-data", G_CALLBACK(on_need_data), this);
 
+        // Add bus watch
         GstBus* bus = gst_element_get_bus(pipeline_chunk);
         gst_bus_add_watch(bus, (GstBusFunc)OnBusMessage, this);
         gst_object_unref(bus);
@@ -359,15 +367,14 @@ void ape::apeGStreamerPlugin::Run()
 
         GstState state;
         gst_element_get_state(pipeline_chunk, &state, nullptr, GST_CLOCK_TIME_NONE);
-        
         bool isPlaying = (state == GST_STATE_PLAYING);
 
-        APE_LOG_DEBUG("[GStreamerPlugin]::Run() Guest> GStreamer state: " << gst_element_state_get_name(state) 
-                    << ", isPlaying: " << isPlaying
-                    << ", isHost: " << mIsHost
-                    << ", mAudioSync: " << (mAudioSync ? "true" : "false")
-                    << ", isHostSyncActive: " << isHostSyncActive
-                    << ", isGuestSyncActive: " << isGuestSyncActive);
+        // APE_LOG_DEBUG("[GStreamerPlugin]::Run() Guest> GStreamer state: " << gst_element_state_get_name(state) 
+        //             << ", isPlaying: " << isPlaying
+        //             << ", isHost: " << mIsHost
+        //             << ", mAudioSync: " << (mAudioSync ? "true" : "false")
+        //             << ", isHostSyncActive: " << isHostSyncActive
+        //             << ", isGuestSyncActive: " << isGuestSyncActive);
 
         // Host sends playback time to clients
         if (isHostSyncActive && isPlaying)
@@ -385,8 +392,7 @@ void ape::apeGStreamerPlugin::Run()
         if (isGuestSyncActive && isPlaying)
         {
             std::chrono::milliseconds receivedTime = mAudioSync->getPlaybackTime();
-            APE_LOG_DEBUG("[GStreamerPlugin]::Run() Guest> Adjusting playback to received timestamp: " 
-                        << receivedTime.count() << " ms");
+            APE_LOG_DEBUG("[GStreamerPlugin]::Run() Guest> Adjusting playback to received timestamp: " << receivedTime.count() << " ms");
             adjustGStreamerPlayback(receivedTime);
         }
         else if (isGuestSyncActive)
