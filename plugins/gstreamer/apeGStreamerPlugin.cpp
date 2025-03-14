@@ -144,7 +144,7 @@ ape::apeGStreamerPlugin::apeGStreamerPlugin()
     mpSceneManager = ape::ISceneManager::getSingletonPtr();
     mCurrentAudioEntityId = "";
     mCurrentAudioSyncEntityId = "";
-    mPipelineDelay = std::chrono::milliseconds(150);
+    mPipelineDelay = std::chrono::milliseconds(0);
     mIsHost = mpCoreConfig->getNetworkConfig().participant == SceneNetwork::ParticipantType::HOST;
 
     // GStreamer initialization
@@ -757,14 +757,14 @@ void ape::apeGStreamerPlugin::adjustGStreamerPlayback(std::chrono::milliseconds 
                   << " ms, Received Time: " << receivedTime.count() 
                   << " ms, Diff: " << diff.count() << " ms");
 
-    // If the difference is too large, perform a seek
-    constexpr int SEEK_THRESHOLD = 1500; // Seek if the difference exceeds 1.5 seconds
+    // If the difference is too large, perform an immediate seek
+    constexpr int SEEK_THRESHOLD = 500; // Seek if the difference exceeds 500ms (aggressive)
     static std::chrono::steady_clock::time_point lastSeekTime = std::chrono::steady_clock::now();
 
     if (std::abs(diff.count()) > SEEK_THRESHOLD) 
     {
         auto now = std::chrono::steady_clock::now();
-        if (std::chrono::duration_cast<std::chrono::seconds>(now - lastSeekTime).count() > 5) // Allow a seek only once every 5 seconds
+        if (std::chrono::duration_cast<std::chrono::seconds>(now - lastSeekTime).count() > 3) // Seek at most every 3s
         {
             seekGStreamerPlayback(receivedTime);
             lastSeekTime = now;
@@ -772,11 +772,11 @@ void ape::apeGStreamerPlugin::adjustGStreamerPlayback(std::chrono::milliseconds 
         }
     }
 
-    // If the difference is small, adjust playback speed gradually
-    constexpr int SMALL_DIFF_THRESHOLD = 100; // Do nothing if the difference is below 100 ms
-    constexpr double MAX_SPEEDUP = 1.03; // Maximum playback speed increase factor
-    constexpr double MIN_SPEEDUP = 0.97; // Maximum playback speed decrease factor
-    constexpr double SPEED_ADJUST_FACTOR = 20000.0; // More gradual adjustment factor
+    // Adjust playback speed aggressively
+    constexpr int SMALL_DIFF_THRESHOLD = 50; // Ignore differences below 50ms
+    constexpr double MAX_SPEEDUP = 1.10; // Allow up to 10% speed increase
+    constexpr double MIN_SPEEDUP = 0.90; // Allow up to 10% slow down
+    constexpr double SPEED_ADJUST_FACTOR = 5000.0; // Faster adjustment factor
 
     static double lastRate = 1.0;
     double rate = 1.0;
@@ -786,10 +786,10 @@ void ape::apeGStreamerPlugin::adjustGStreamerPlayback(std::chrono::milliseconds 
         rate = 1.0 + (static_cast<double>(diff.count()) / SPEED_ADJUST_FACTOR);
         rate = std::clamp(rate, MIN_SPEEDUP, MAX_SPEEDUP); // Clamp the playback speed
 
-        // Gradually revert to 1.0 if the difference is very small
-        if (std::abs(diff.count()) < 50) 
+        // Gradually revert to 1.0 once within 20ms difference
+        if (std::abs(diff.count()) < 20) 
         {
-            rate = lastRate - 0.001; // Reduce speed incrementally
+            rate = lastRate - 0.005; // Reduce speed more quickly
             rate = std::max(rate, 1.0);
         }
     }
