@@ -267,6 +267,7 @@ void ape::apeGStreamerPlugin::Init()
         return;
     }
 
+    APE_LOG_DEBUG("[GStreamerPlugin]::Init() Initializing GStreamer plugin, waiting for 10 seconds...");
     std::this_thread::sleep_for(std::chrono::seconds(10));
 
     // plugin config
@@ -320,6 +321,9 @@ void ape::apeGStreamerPlugin::Init()
         else {
             APE_LOG_ERROR("[GStreamerPlugin]::Init() Failed to create Audio entity!");
         }
+    }
+    else {
+        APE_LOG_ERROR("[GStreamerPlugin]::Init() Failed to load plugin config!");
     }
 
 	APE_LOG_FUNC_LEAVE();
