@@ -166,13 +166,14 @@ ape::apeGStreamerPlugin::apeGStreamerPlugin()
     {
         pipeline_chunk = gst_pipeline_new("audio-pipeline");
         appsrc = gst_element_factory_make("appsrc", "audio-source");
-        GstElement* queue = gst_element_factory_make("queue", "buffer-queue");
+        // GstElement* queue = gst_element_factory_make("queue", "buffer-queue");
         GstElement* decodebin = gst_element_factory_make("decodebin", "decoder");
         GstElement* audioconvert = gst_element_factory_make("audioconvert", "converter");
         GstElement* audioresample = gst_element_factory_make("audioresample", "resampler");
         GstElement* autoaudiosink = gst_element_factory_make("autoaudiosink", "audio-output");
 
-        if (!pipeline_chunk || !appsrc || !queue || !decodebin || !audioconvert || !audioresample || !autoaudiosink) {
+        // if (!pipeline_chunk || !appsrc || !queue || !decodebin || !audioconvert || !audioresample || !autoaudiosink) {
+        if (!pipeline_chunk || !appsrc || !decodebin || !audioconvert || !audioresample || !autoaudiosink) {
             APE_LOG_DEBUG("[GStreamerPlugin]::Constructor() Failed to create elements!");
             return;
         }
@@ -185,7 +186,7 @@ ape::apeGStreamerPlugin::apeGStreamerPlugin()
         gst_element_link_many(audioconvert, audioresample, autoaudiosink, nullptr);
 
         // Set a delay on the queue
-        g_object_set(queue, "min-threshold-time", (guint64)150 * GST_MSECOND, nullptr); // 150 ms delay
+        // g_object_set(queue, "min-threshold-time", (guint64)150 * GST_MSECOND, nullptr); // 150 ms delay
 
         // Connect signals
         g_signal_connect(decodebin, "pad-added", G_CALLBACK(on_pad_added), audioconvert);
