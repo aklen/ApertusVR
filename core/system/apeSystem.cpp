@@ -42,9 +42,9 @@ ape::ConfigManagerImpl* gpConfigManagerImpl;
 void ape::System::Start(const char* configFolderPath, bool isBlocking, std::function<void()> userThreadFunction, int step_interval)
 {
 	gpLogManagerImpl = new LogManagerImpl();
-	APE_LOG("ApertusVR - Your open source AR/VR engine for science, education and industry");
-	APE_LOG("Build Target Platform: " << APE_PLATFORM_STRING);
-	APE_LOG("-----------------------------------------------------------------------------");
+	APE_LOG_INFO("ApertusVR - Your open source AR/VR engine for science, education and industry");
+	APE_LOG_INFO("Build Target Platform: " << APE_PLATFORM_STRING);
+	APE_LOG_INFO("-----------------------------------------------------------------------------");
 	gpCoreConfigImpl = new CoreConfigImpl(std::string(configFolderPath));
 	gpConfigManagerImpl = new ConfigManagerImpl();
 	gpEventManagerImpl = new EventManagerImpl();
